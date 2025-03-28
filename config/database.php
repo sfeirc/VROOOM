@@ -1,8 +1,8 @@
 <?php
 // base de données
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');      
-define('DB_PASS', '');         
+define('DB_USER', 'clovis');      
+define('DB_PASS', 'clovis');         
 define('DB_NAME', 'vroom_prestige');
 
 try {

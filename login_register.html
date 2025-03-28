@@ -254,15 +254,10 @@
                             </div>
                         </div>
 
-                        <div class="mt-6 grid grid-cols-3 gap-3">
-                            <button class="social-btn flex justify-center items-center py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <div class="mt-6">
+                            <button onclick="initiateGoogleLogin()" class="social-btn w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 space-x-2">
                                 <i class="fab fa-google text-red-600"></i>
-                            </button>
-                            <button class="social-btn flex justify-center items-center py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                <i class="fab fa-facebook-f text-blue-600"></i>
-                            </button>
-                            <button class="social-btn flex justify-center items-center py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50">
-                                <i class="fab fa-apple text-gray-900"></i>
+                                <span class="text-gray-700">Continuer avec Google</span>
                             </button>
                         </div>
                     </div>
@@ -422,6 +417,16 @@
 
         // verifier si l'utilisateur est deja connecté au chargement de la page
         document.addEventListener('DOMContentLoaded', checkAuth);
+
+        // Google OAuth Configuration
+        const googleClientId = '549081801061-lgpg1eledv5ptt3dqsc272rg144vsi2p.apps.googleusercontent.com';
+        const redirectUri = 'http://localhost/VROOOM/api/google-callback.php';
+
+        function initiateGoogleLogin() {
+            const scope = 'email profile';
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${encodeURIComponent(googleClientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+            window.location.href = authUrl;
+        }
     </script>
 </body>
 </html>
