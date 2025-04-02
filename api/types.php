@@ -1,10 +1,12 @@
 <?php
+// Récupérer les types de véhicules
 require_once '../config/database.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 
+// Essayer de récupérer les types de véhicules
 try {
     $stmt = $pdo->prepare("
         SELECT DISTINCT t.IdType, t.NomType

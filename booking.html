@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réserver - Vroom Prestige</title>
+    <link rel="icon" type="image/png" href="assets/img/logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+        .calendar-day {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .calendar-day:hover:not(:disabled) {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        .calendar-day.selected div {
+            background-color: #007bff !important;
+            color: white !important;
+        }
+        .calendar-day.in-range {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        .calendar-day.in-range div {
+            background-color: rgba(0, 123, 255, 0.1);
+            border-radius: 0 !important;
+        }
+        .calendar-day.range-start div,
+        .calendar-day.single-day div {
+            background-color: #007bff !important;
+            color: white !important;
+            border-radius: 9999px !important;
+        }
+        .calendar-day.range-end div {
+            background-color: #007bff !important;
+            color: white !important;
+            border-radius: 9999px !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex-shrink-0">
+                        <img class="h-16 w-auto" src="assets/logo/logo.png" alt="Vroom Prestige">
+                    </a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <!-- La navigation sera injectée par auth-check.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="min-h-screen">
+        <div class="gap-1 px-6 flex flex-1 justify-center py-5">
+            <div class="layout-content-container flex flex-col max-w-[920px] flex-1">
+                <div id="car-details" class="mb-8 bg-white rounded-lg shadow">
+                    <!-- Car details will be loaded here -->
+                </div>
+            </div>
+            <div class="layout-content-container flex flex-col w-[360px]">
+                <div class="flex flex-wrap items-center justify-center gap-6 p-4 bg-white rounded-lg shadow">
+                    <div class="flex min-w-72 max-w-[336px] flex-1 flex-col gap-0.5">
+                        <div class="flex justify-between items-center mb-4">
+                            <button id="prev-month" class="text-[#007bff] hover:text-blue-700">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <h3 id="current-month" class="text-lg font-medium text-[#333]"></h3>
+                            <button id="next-month" class="text-[#007bff] hover:text-blue-700">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div id="calendar" class="grid grid-cols-7 gap-0">
+                            <!-- Calendar will be generated here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="flex px-4 py-3 justify-start">
+                    <button id="book-button" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-5 flex-1 bg-[#007bff] text-white text-base font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="truncate">Réserver</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    <script src="assets/js/auth-check.js"></script>
+    <script>
+        // Initialiser Notyf
+        const notyf = new Notyf({
+            duration: 3000,
+            position: { x: 'right', y: 'top' }
+        });
+
+        // Récupérer l'ID de la voiture à partir de l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const carId = urlParams.get('id');
+
+        // États du calendrier
+        let selectedStartDate = null;
+        let selectedEndDate = null;
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        // Charger les détails de la voiture
+        async function loadCarDetails() {
+            try {
+                const response = await fetch(`api/car-details.php?id=${carId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const carDetailsHtml = `
+                        <div class="p-4">
+                            <div class="w-full h-[300px] bg-center bg-no-repeat bg-cover rounded-xl relative" 
+                                style="background-image: url('${data.car.Photo}');">
+                            </div>
+                        </div>
+                        <h1 class="text-[#333] tracking-light text-[32px] font-bold leading-tight px-4 text-left pb-3">
+                            ${data.car.NomMarque} ${data.car.Modele}
+                        </h1>
+                        <div class="p-4">
+                            <h2 class="text-[#333] text-xl font-bold mb-4">Informations générales</h2>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-car text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Marque</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.NomMarque}</p>
+                                </div>
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-car-side text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Modèle</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.Modele}</p>
+                                </div>
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-calendar-alt text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Année</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.Annee}</p>
+                                </div>
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-tag text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Type</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.NomType}</p>
+                                </div>
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-euro-sign text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Prix journalier</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.PrixLocation}€ / jour</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 mt-4">
+                            <h2 class="text-[#333] text-xl font-bold mb-4">Caractéristiques du véhicule</h2>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-gas-pump text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Énergie</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.Energie || 'Non spécifié'}</p>
+                                </div>
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-cogs text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Boîte de vitesse</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.BoiteVitesse || 'Non spécifié'}</p>
+                                </div>
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-door-open text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Nombre de portes</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.NbPorte || 'Non spécifié'}</p>
+                                </div>
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-users text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Places</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.NbPlaces || 'Non spécifié'}</p>
+                                </div>
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-palette text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Couleur</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.Couleur || 'Non spécifié'}</p>
+                                </div>
+                                <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-tachometer-alt text-[#007bff]"></i>
+                                        <span class="text-[#6c757d] text-sm">Puissance</span>
+                                    </div>
+                                    <p class="text-[#333] font-medium">${data.car.Puissance ? data.car.Puissance + ' ch' : 'Non spécifié'}</p>
+                                </div>
+                            </div>
+                            ${data.car.Description ? `
+                            <div class="mt-6 bg-[#f8f9fa] p-4 rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-info-circle text-[#007bff]"></i>
+                                    <span class="text-[#6c757d] text-sm">Description</span>
+                                </div>
+                                <p class="text-[#333]">${data.car.Description}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    document.getElementById('car-details').innerHTML = carDetailsHtml;
+                } else {
+                    notyf.error('Erreur lors du chargement des détails du véhicule');
+                }
+            } catch (error) {
+                console.error('Error loading car details:', error);
+                notyf.error('Une erreur est survenue');
+            }
+        }
+
+        // Générer le calendrier
+        function generateCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+
+            // Mettre à jour l'affichage du mois et de l'année actuels
+            const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            document.getElementById('current-month').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+            // Ajouter les en-têtes de jour
+            const days = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+            days.forEach(day => {
+                const dayHeader = document.createElement('p');
+                dayHeader.className = 'text-[#333] text-[13px] font-bold leading-normal tracking-[0.015em] flex h-12 w-full items-center justify-center pb-0.5';
+                dayHeader.textContent = day;
+                calendar.appendChild(dayHeader);
+            });
+
+            // Récupérer la date du jour
+            const today = new Date();
+            
+            // Récupérer le premier jour du mois et le nombre de jours
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+
+            // Ajouter des cellules vides pour les jours avant le premier jour du mois
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'h-12 w-full';
+                calendar.appendChild(emptyDay);
+            }
+
+            // Ajouter les jours du calendrier
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(currentYear, currentMonth, day);
+                const button = document.createElement('button');
+                button.className = 'calendar-day h-12 w-full text-[#333] text-sm font-medium leading-normal';
+                button.innerHTML = `<div class="flex size-full items-center justify-center rounded-full">${day}</div>`;
+                
+                // Désactiver les dates passées du mois actuel et de l'année actuelle
+                if (currentYear < today.getFullYear() || 
+                    (currentYear === today.getFullYear() && currentMonth < today.getMonth()) ||
+                    (currentYear === today.getFullYear() && currentMonth === today.getMonth() && day < today.getDate())) {
+                    button.disabled = true;
+                    button.classList.add('opacity-50');
+                } else {
+                    button.addEventListener('click', () => handleDateSelection(date));
+                }
+
+                calendar.appendChild(button);
+            }
+            
+            // Mettre à jour les sélections existantes
+            updateCalendarSelection();
+        }
+
+        // Mois précédent
+        function previousMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            generateCalendar();
+        }
+
+        // Mois suivant
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            generateCalendar();
+        }
+
+        // Gérer la sélection de date
+        function handleDateSelection(date) {
+            if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
+                // Début d'une nouvelle sélection
+                selectedStartDate = date;
+                selectedEndDate = null;
+            } else {
+                // Compléter la sélection
+                if (date > selectedStartDate) {
+                    selectedEndDate = date;
+                } else {
+                    selectedEndDate = selectedStartDate;
+                    selectedStartDate = date;
+                }
+            }
+
+            // Mettre à jour l'interface du calendrier
+            updateCalendarSelection();
+
+            // Activer/désactiver le bouton de réservation
+            const bookButton = document.getElementById('book-button');
+            bookButton.disabled = !(selectedStartDate && selectedEndDate);
+        }
+
+        // Mettre à jour l'interface de sélection du calendrier
+        function updateCalendarSelection() {
+            const buttons = document.querySelectorAll('.calendar-day');
+            buttons.forEach(button => {
+                const buttonDate = new Date(
+                    new Date().getFullYear(),
+                    new Date().getMonth(),
+                    parseInt(button.textContent)
+                );
+
+                // Remove all possible classes
+                button.classList.remove('in-range', 'range-start', 'range-end', 'single-day', 'selected');
+                button.querySelector('div').classList.remove('bg-[#007bff]');
+                
+                if (selectedStartDate && selectedEndDate) {
+                    if (buttonDate >= selectedStartDate && buttonDate <= selectedEndDate) {
+                        // Add in-range class to all days between start and end
+                        button.classList.add('in-range');
+                        
+                        // Add specific classes for start and end dates
+                        if (buttonDate.getTime() === selectedStartDate.getTime()) {
+                            button.classList.add('range-start');
+                        }
+                        if (buttonDate.getTime() === selectedEndDate.getTime()) {
+                            button.classList.add('range-end');
+                        }
+                        
+                        // If start and end are the same day
+                        if (selectedStartDate.getTime() === selectedEndDate.getTime() && 
+                            buttonDate.getTime() === selectedStartDate.getTime()) {
+                            button.classList.remove('range-start', 'range-end', 'in-range');
+                            button.classList.add('single-day');
+                        }
+                    }
+                } else if (selectedStartDate && buttonDate.getTime() === selectedStartDate.getTime()) {
+                    // When only start date is selected
+                    button.classList.add('single-day');
+                    button.querySelector('div').classList.add('bg-[#007bff]');
+                }
+            });
+        }
+
+        // Gérer la réservation
+        async function handleBooking() {
+            if (!selectedStartDate || !selectedEndDate) {
+                notyf.error('Veuillez sélectionner les dates de réservation');
+                return;
+            }
+
+            try {
+                // Vérifier l'authentification avant de procéder
+                const authenticated = await isAuthenticated();
+                if (!authenticated) {
+                    window.location.href = `login_register.html?redirect=${encodeURIComponent(window.location.href)}`;
+                    return;
+                }
+
+                // Format the dates for display and calculation
+                const startDateTime = new Date(selectedStartDate);
+                startDateTime.setHours(0, 0, 0, 0);
+                const endDateTime = new Date(selectedEndDate);
+                endDateTime.setHours(23, 59, 59, 999);
+
+                // Calculate number of days
+                const days = Math.ceil((endDateTime - startDateTime) / (1000 * 60 * 60 * 24));
+                
+                // Get daily price from the displayed information
+                let dailyPrice = 0;
+                
+                // Find price element by searching for text content containing "€ / jour"
+                const priceElements = document.querySelectorAll('p.font-medium');
+                for (const element of priceElements) {
+                    if (element.textContent.includes('€ / jour')) {
+                        dailyPrice = parseFloat(element.textContent.split('€')[0]);
+                        break;
+                    }
+                }
+                
+                // If not found, try a more direct approach with the price section
+                if (dailyPrice === 0) {
+                    const prixElement = document.querySelector('[class*="Prix journalier"]');
+                    if (prixElement && prixElement.nextElementSibling) {
+                        const priceText = prixElement.nextElementSibling.textContent;
+                        dailyPrice = parseFloat(priceText.split('€')[0]);
+                    }
+                }
+                
+                if (dailyPrice === 0) {
+                    throw new Error('Impossible de déterminer le prix journalier');
+                }
+                
+                // Calculate total amount
+                const totalAmount = days * dailyPrice;
+
+                // Redirect to the reservation summary page with all necessary information
+                let summaryUrl = './reservation-summary.html';
+                summaryUrl += `?car_id=${carId}`;
+                summaryUrl += `&start_date=${startDateTime.toISOString()}`;
+                summaryUrl += `&end_date=${endDateTime.toISOString()}`;
+                summaryUrl += `&total_amount=${totalAmount.toFixed(2)}`;
+                summaryUrl += `&days=${days}`;
+
+                window.location.href = summaryUrl;
+            } catch (error) {
+                console.error('Error preparing reservation:', error);
+                notyf.error('Une erreur est survenue lors de la préparation de la réservation');
+            }
+        }
+
+        // Vérifier l'authentification au chargement de la page
+        document.addEventListener('DOMContentLoaded', async () => {
+            const authenticated = await isAuthenticated();
+            if (!authenticated) {
+                window.location.href = `login_register.html?redirect=${encodeURIComponent(window.location.href)}`;
+                return;
+            }
+
+            // Initialiser la page
+            updateNavigation();
+            loadCarDetails();
+            generateCalendar();
+
+            // Ajouter des écouteurs d'événements pour la navigation du calendrier
+            document.getElementById('prev-month').addEventListener('click', previousMonth);
+            document.getElementById('next-month').addEventListener('click', nextMonth);
+
+            // Ajouter un écouteur d'événements au bouton de réservation
+            document.getElementById('book-button').addEventListener('click', handleBooking);
+        });
+    </script>
+</body>
+</html>

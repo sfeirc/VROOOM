@@ -40,7 +40,7 @@
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <a href="/" class="flex-shrink-0">
-                        <img class="h-8 w-auto" src="assets/images/logo.png" alt="Vroom Prestige">
+                        <img class="h-16 w-auto" src="assets/logo/logo.png" alt="Vroom Prestige">
                     </a>
                 </div>
                 <div class="hidden md:block">
@@ -204,31 +204,6 @@
         </div>
     </footer>
 
-    <!-- Login Modal -->
-    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-auto">
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-user-lock text-blue-600 text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Connexion Requise</h3>
-                    <p class="text-gray-600 mb-6">
-                        Veuillez vous connecter ou créer un compte pour réserver ce véhicule.
-                    </p>
-                    <div class="flex gap-4">
-                        <a href="login_register.html" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-center">
-                            Se connecter
-                        </a>
-                        <button onclick="closeLoginModal()" class="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
-                            Annuler
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
     <script src="assets/js/auth-check.js"></script>
     <script>
@@ -255,59 +230,11 @@
             document.getElementById('mobile-menu').classList.toggle('hidden');
         });
 
-        // Fonctions de gestion des modales
-        function showLoginModal() {
-            const modal = document.getElementById('login-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-            }
-        }
-
-        function closeLoginModal() {
-            const modal = document.getElementById('login-modal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        }
-
         // Gestionnaire de tentative de réservation
         async function handleBookingAttempt(carId) {
-            try {
-                // Vérifier si l'utilisateur est connecté
-                const response = await fetch('api/check-auth.php', {
-                    credentials: 'include' // Important: inclure les identifiants pour les cookies de session
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP! statut: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.isLoggedIn) {
-                    // L'utilisateur est connecté, rediriger vers la page de réservation
-                    window.location.href = `reserver.html?id=${carId}`;
-                } else {
-                    // L'utilisateur n'est pas connecté, afficher la modale de connexion
-                    showLoginModal();
-                }
-            } catch (error) {
-                console.error('Erreur lors de la vérification de l\'authentification:', error);
-                // Afficher la modale de connexion en cas d'erreur
-                showLoginModal();
-            }
+            // Since we only show the button to authenticated users, we can directly redirect to the booking page
+            window.location.href = `booking.html?id=${carId}`;
         }
-
-        // Fermer la modale lors d'un clic à l'extérieur
-        document.addEventListener('click', function(event) {
-            const modal = document.getElementById('login-modal');
-            if (modal && !modal.classList.contains('hidden')) {
-                const modalContent = modal.querySelector('.bg-white');
-                if (!modalContent.contains(event.target) && !event.target.closest('button')) {
-                    closeLoginModal();
-                }
-            }
-        });
 
         // Écouteurs d'événements pour les filtres
         document.addEventListener('DOMContentLoaded', function() {
@@ -371,9 +298,12 @@
         }
 
         // Afficher les voitures dans la grille
-        function displayCars(cars) {
+        async function displayCars(cars) {
             const resultsContainer = document.getElementById('results-container');
             resultsContainer.innerHTML = '';
+
+            // Check authentication status
+            const authenticated = await isAuthenticated();
 
             cars.forEach(car => {
                 // Créer l'élément de voiture
@@ -417,11 +347,12 @@
                             <div><i class="fas fa-horse mr-1"></i> ${power}</div>
                             <div><i class="fas fa-door-open mr-1"></i> ${car.NbPorte || '-'} portes</div>
                         </div>
-                        <button onclick="handleBookingAttempt('${car.IdVoiture}')" 
-                                class="block w-full bg-blue-600 text-white text-center py-2 rounded hover:bg-blue-700 transition-colors ${car.IdStatut !== 'STAT001' ? 'opacity-50 cursor-not-allowed' : ''}"
-                                ${car.IdStatut !== 'STAT001' ? 'disabled' : ''}>
-                            ${car.IdStatut === 'STAT001' ? 'Réserver' : 'Non disponible'}
-                        </button>
+                        ${authenticated && car.IdStatut === 'STAT001' ? `
+                            <button onclick="handleBookingAttempt('${car.IdVoiture}')" 
+                                    class="block w-full bg-blue-600 text-white text-center py-2 rounded hover:bg-blue-700 transition-colors">
+                                Réserver
+                            </button>
+                        ` : ''}
                     </div>
                 `;
                 resultsContainer.appendChild(carElement);

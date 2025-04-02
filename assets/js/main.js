@@ -10,14 +10,19 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadFeaturedCars() {
     try {
         const response = await fetch('api/featured-cars.php');
-        const cars = await response.json();
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to load featured cars');
+        }
         
         const featuredCarsContainer = document.getElementById('featured-cars');
-        if (!featuredCarsContainer) return;
-
         featuredCarsContainer.innerHTML = '';
         
-        cars.forEach(car => {
+        // Check authentication status
+        const authenticated = await isAuthenticated();
+        
+        data.cars.forEach(car => {
             const carElement = document.createElement('div');
             carElement.className = 'bg-white rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl';
             
@@ -43,10 +48,12 @@ async function loadFeaturedCars() {
                         <div><i class="fas fa-cog mr-1"></i> ${car.BoiteVitesse}</div>
                         <div><i class="fas fa-users mr-1"></i> ${car.NbPlaces} places</div>
                     </div>
-                    <a href="reserver.html?id=${car.IdVoiture}" 
-                       class="block w-full bg-blue-600 text-white text-center py-2 rounded hover:bg-blue-700 transition-colors">
-                        Réserver
-                    </a>
+                    ${authenticated ? `
+                        <a href="reserver.html?id=${car.IdVoiture}" 
+                           class="block w-full bg-blue-600 text-white text-center py-2 rounded hover:bg-blue-700 transition-colors">
+                            Réserver
+                        </a>
+                    ` : ''}
                 </div>
             `;
             

@@ -90,7 +90,7 @@ async function updateNavigation() {
                         <a href="profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                             <i class="fas fa-user-circle mr-2"></i> Mon Profil
                         </a>
-                        <a href="reservations.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                        <a href="mes-reservations.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                             <i class="fas fa-calendar-alt mr-2"></i> Mes Réservations
                         </a>
                         <a href="favorites.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">

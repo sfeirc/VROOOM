@@ -4,41 +4,41 @@ require_once '../config/env.php';
 
 session_start();
 
-// Load environment variables
+// Charger les variables d'environnement
 loadEnv();
 
-// Google OAuth Configuration
+// Configuration OAuth Google
 $clientID = getenv('GOOGLE_CLIENT_ID');
 $clientSecret = getenv('GOOGLE_CLIENT_SECRET');
 $redirectUri = getenv('GOOGLE_REDIRECT_URI');
 
-// Debug logging (remove in production)
+// Journalisation de débogage (à supprimer en production)
 error_log("Client ID: " . substr($clientID, 0, 10) . "...");
 error_log("Redirect URI: " . $redirectUri);
 
-// Verify configuration
+// Vérifier la configuration
 if (!$clientID || !$clientSecret || !$redirectUri) {
-    error_log("Missing OAuth configuration");
-    die('Google OAuth configuration is missing. Please check your .env file.');
+    error_log("Configuration OAuth manquante");
+    die('La configuration OAuth Google est manquante. Veuillez vérifier votre fichier .env.');
 }
 
-// Handle the OAuth flow
+// Gérer le flux OAuth
 if (isset($_GET['code'])) {
     try {
-        // Exchange code for access token
+        // Échanger le code contre un jeton d'accès
         $token = getAccessToken($_GET['code']);
         
         if (!$token || isset($token['error'])) {
-            error_log("Token Error: " . json_encode($token));
-            throw new Exception($token['error_description'] ?? 'Failed to get access token');
+            error_log("Erreur de jeton: " . json_encode($token));
+            throw new Exception($token['error_description'] ?? 'Impossible d\'obtenir le jeton d\'accès');
         }
         
-        // Get user info with the access token
+        // Obtenir les informations de l'utilisateur avec le jeton d'accès
         $userInfo = getUserInfo($token);
         
         if (!$userInfo || isset($userInfo['error'])) {
-            error_log("User Info Error: " . json_encode($userInfo));
-            throw new Exception('Failed to get user info');
+            error_log("Erreur d'informations utilisateur: " . json_encode($userInfo));
+            throw new Exception('Impossible d\'obtenir les informations de l\'utilisateur');
         }
         
         // Vérifier si l'utilisateur existe dans la base de données
@@ -107,11 +107,12 @@ if (isset($_GET['code'])) {
         header('Location: ../index.html');
         exit;
     } catch (Exception $e) {
-        error_log("Google Auth Error: " . $e->getMessage());
+        error_log("Erreur d'authentification Google: " . $e->getMessage());
         header('Location: ../login_register.html?error=' . urlencode($e->getMessage()));
         exit;
     }
 }
+
 // Fonction pour obtenir le jeton d'accès
 function getAccessToken($code) {
     global $clientID, $clientSecret, $redirectUri;
@@ -129,14 +130,14 @@ function getAccessToken($code) {
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Only for development
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Uniquement pour le développement
     
     $response = curl_exec($ch);
     $error = curl_error($ch);
     curl_close($ch);
     
     if ($error) {
-        error_log("CURL Error: " . $error);
+        error_log("Erreur CURL: " . $error);
         return ['error' => 'curl_error', 'error_description' => $error];
     }
     

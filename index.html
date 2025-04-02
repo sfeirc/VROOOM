@@ -19,7 +19,7 @@
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <a href="/" class="flex-shrink-0">
-                        <img class="h-8 w-auto" src="assets/images/logo.png" alt="Vroom Prestige">
+                        <img class="h-16 w-auto" src="assets/logo/logo.png" alt="Vroom Prestige">
                     </a>
                 </div>
                 <div class="hidden md:block">
@@ -160,7 +160,7 @@
     }
 
     // mettre a jour les resultats de la recherche
-    function updateSearchResults(data) {
+    async function updateSearchResults(data) {
         const resultsContainer = document.getElementById('search-results');
         resultsContainer.innerHTML = '';
         
@@ -172,6 +172,16 @@
             `;
             return;
         }
+        
+        await displayCars(data);
+    }
+
+    async function displayCars(data) {
+        const resultsContainer = document.getElementById('search-results');
+        resultsContainer.innerHTML = '';
+        
+        // Check authentication status
+        const authenticated = await isAuthenticated();
         
         data.forEach(car => {
             const carElement = document.createElement('div');
@@ -194,10 +204,12 @@
                         <div><i class="fas fa-cog mr-1"></i> ${car.BoiteVitesse}</div>
                         <div><i class="fas fa-users mr-1"></i> ${car.NbPlaces} seats</div>
                     </div>
-                    <a href="reserver.html?id=${car.IdVoiture}" 
-                       class="block w-full bg-blue-600 text-white text-center py-2 rounded hover:bg-blue-700">
-                        Reserver maintenant
-                    </a>
+                    ${authenticated ? `
+                        <a href="reserver.html?id=${car.IdVoiture}" 
+                           class="block w-full bg-blue-600 text-white text-center py-2 rounded hover:bg-blue-700">
+                            Reserver maintenant
+                        </a>
+                    ` : ''}
                 </div>
             `;
             resultsContainer.appendChild(carElement);

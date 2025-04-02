@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de réservation - Vroom Prestige</title>
+    <link rel="icon" type="image/png" href="assets/img/logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex-shrink-0">
+                        <img class="h-16 w-auto" src="assets/img/logo.png" alt="Vroom Prestige">
+                    </a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <!-- La navigation sera injectée par auth-check.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="min-h-screen">
+        <div class="container mx-auto px-4 py-8">
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden max-w-4xl mx-auto">
+                <div class="p-6">
+                    <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Confirmation de Réservation</h1>
+                    <div class="mb-6 text-center">
+                        <p class="text-gray-600">Veuillez vérifier les détails de votre réservation avant de confirmer</p>
+                    </div>
+                    
+                    <div id="summary-container" class="mb-8">
+                        <!-- Les informations de réservation seront chargées ici -->
+                        <div class="flex flex-col md:flex-row gap-8">
+                            <div class="w-full md:w-1/2">
+                                <div id="car-details" class="mb-6">
+                                    <h2 class="text-xl font-semibold mb-4 pb-2 border-b border-gray-200">Détails du Véhicule</h2>
+                                    <!-- Car details will be loaded here -->
+                                </div>
+                                
+                                <div id="booking-details" class="mb-6">
+                                    <h2 class="text-xl font-semibold mb-4 pb-2 border-b border-gray-200">Détails de la Réservation</h2>
+                                    <!-- Booking details will be loaded here -->
+                                </div>
+                            </div>
+                            
+                            <div class="w-full md:w-1/2">
+                                <div id="user-details" class="mb-6">
+                                    <h2 class="text-xl font-semibold mb-4 pb-2 border-b border-gray-200">Informations Personnelles</h2>
+                                    <!-- User details will be loaded here -->
+                                </div>
+                                
+                                <div id="price-details" class="mb-6">
+                                    <h2 class="text-xl font-semibold mb-4 pb-2 border-b border-gray-200">Détails du Prix</h2>
+                                    <!-- Price details will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <a href="javascript:history.back()" class="px-6 py-3 bg-gray-300 text-gray-800 rounded-lg font-medium hover:bg-gray-400 transition duration-200">
+                            <i class="fas fa-arrow-left mr-2"></i>Retour
+                        </a>
+                        <button id="confirm-booking" class="px-6 py-3 bg-[#007bff] text-white rounded-lg font-medium hover:bg-blue-600 transition duration-200">
+                            <i class="fas fa-check mr-2"></i>Confirmer la réservation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    <script src="assets/js/auth-check.js"></script>
+    <script>
+        // Initialiser Notyf
+        const notyf = new Notyf({
+            duration: 3000,
+            position: { x: 'right', y: 'top' }
+        });
+
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const carId = urlParams.get('car_id');
+        const startDate = urlParams.get('start_date');
+        const endDate = urlParams.get('end_date');
+        const totalAmount = urlParams.get('total_amount');
+        const days = urlParams.get('days');
+
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        // Load user details
+        async function loadUserDetails() {
+            try {
+                const response = await fetch('api/user-details.php');
+                const data = await response.json();
+
+                if (data.success) {
+                    const userHtml = `
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-user text-[#007bff]"></i>
+                                    <span class="text-[#6c757d] text-sm">Nom</span>
+                                </div>
+                                <p class="text-[#333] font-medium">${data.user.Nom} ${data.user.Prenom}</p>
+                            </div>
+                            <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-envelope text-[#007bff]"></i>
+                                    <span class="text-[#6c757d] text-sm">Email</span>
+                                </div>
+                                <p class="text-[#333] font-medium">${data.user.Email}</p>
+                            </div>
+                            <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-phone text-[#007bff]"></i>
+                                    <span class="text-[#6c757d] text-sm">Téléphone</span>
+                                </div>
+                                <p class="text-[#333] font-medium">${data.user.Telephone || 'Non spécifié'}</p>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('user-details').insertAdjacentHTML('beforeend', userHtml);
+                } else {
+                    throw new Error('Erreur lors du chargement des détails de l\'utilisateur');
+                }
+            } catch (error) {
+                console.error('Error loading user details:', error);
+                notyf.error('Erreur lors du chargement des informations utilisateur');
+            }
+        }
+
+        // Load car details
+        async function loadCarDetails() {
+            try {
+                const response = await fetch(`api/car-details.php?id=${carId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const carHtml = `
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="w-full h-[200px] bg-center bg-no-repeat bg-cover rounded-lg mb-4" 
+                                style="background-image: url('${data.car.Photo}');">
+                            </div>
+                            <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-car text-[#007bff]"></i>
+                                    <span class="text-[#6c757d] text-sm">Voiture</span>
+                                </div>
+                                <p class="text-[#333] font-medium">${data.car.NomMarque} ${data.car.Modele}</p>
+                            </div>
+                            <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-tag text-[#007bff]"></i>
+                                    <span class="text-[#6c757d] text-sm">Type</span>
+                                </div>
+                                <p class="text-[#333] font-medium">${data.car.NomType}</p>
+                            </div>
+                            <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i class="fas fa-euro-sign text-[#007bff]"></i>
+                                    <span class="text-[#6c757d] text-sm">Prix journalier</span>
+                                </div>
+                                <p class="text-[#333] font-medium">${data.car.PrixLocation}€ / jour</p>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('car-details').insertAdjacentHTML('beforeend', carHtml);
+                } else {
+                    throw new Error('Erreur lors du chargement des détails du véhicule');
+                }
+            } catch (error) {
+                console.error('Error loading car details:', error);
+                notyf.error('Erreur lors du chargement des détails du véhicule');
+            }
+        }
+
+        // Display booking details
+        function displayBookingDetails() {
+            const bookingHtml = `
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-calendar-alt text-[#007bff]"></i>
+                            <span class="text-[#6c757d] text-sm">Date de début</span>
+                        </div>
+                        <p class="text-[#333] font-medium">${formatDate(startDate)}</p>
+                    </div>
+                    <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-calendar-alt text-[#007bff]"></i>
+                            <span class="text-[#6c757d] text-sm">Date de fin</span>
+                        </div>
+                        <p class="text-[#333] font-medium">${formatDate(endDate)}</p>
+                    </div>
+                    <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-clock text-[#007bff]"></i>
+                            <span class="text-[#6c757d] text-sm">Durée</span>
+                        </div>
+                        <p class="text-[#333] font-medium">${days} jour${days > 1 ? 's' : ''}</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('booking-details').insertAdjacentHTML('beforeend', bookingHtml);
+        }
+
+        // Display price details
+        function displayPriceDetails() {
+            const priceHtml = `
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="bg-[#f8f9fa] p-4 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-calculator text-[#007bff]"></i>
+                            <span class="text-[#6c757d] text-sm">Calcul du prix</span>
+                        </div>
+                        <p class="text-[#333] font-medium">${parseFloat(totalAmount) / parseInt(days)}€ × ${days} jours</p>
+                    </div>
+                    <div class="bg-[#f8f9fa] p-4 rounded-lg border-2 border-[#007bff]">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-euro-sign text-[#007bff]"></i>
+                            <span class="text-[#6c757d] text-sm">Total</span>
+                        </div>
+                        <p class="text-[#333] font-bold text-lg">${parseFloat(totalAmount).toFixed(2)}€</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('price-details').insertAdjacentHTML('beforeend', priceHtml);
+        }
+
+        // Handle final booking confirmation
+        async function handleConfirmBooking() {
+            try {
+                document.getElementById('confirm-booking').disabled = true;
+                document.getElementById('confirm-booking').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Traitement en cours...';
+
+                // Format the dates to include time
+                const startDateTime = new Date(startDate);
+                startDateTime.setHours(0, 0, 0, 0);
+                const endDateTime = new Date(endDate);
+                endDateTime.setHours(23, 59, 59, 999);
+
+                const formData = new FormData();
+                formData.append('action', 'create_reservation');
+                formData.append('car_id', carId);
+                formData.append('start_date', startDateTime.toISOString().slice(0, 19).replace('T', ' '));
+                formData.append('end_date', endDateTime.toISOString().slice(0, 19).replace('T', ' '));
+                formData.append('amount', totalAmount);
+
+                console.log('Sending reservation data:', {
+                    car_id: carId,
+                    start_date: startDateTime.toISOString().slice(0, 19).replace('T', ' '),
+                    end_date: endDateTime.toISOString().slice(0, 19).replace('T', ' '),
+                    amount: totalAmount
+                });
+
+                const response = await fetch('api/reservations.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+                
+                // Try to parse the response as JSON
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('Error parsing JSON response:', parseError);
+                    throw new Error('La réponse du serveur n\'est pas au format JSON valide');
+                }
+
+                console.log('Parsed response:', data);
+
+                if (data.success) {
+                    notyf.success('Réservation créée avec succès');
+                    setTimeout(() => {
+                        window.location.href = 'mes-reservations.html?success=reservation';
+                    }, 1500);
+                } else {
+                    if (data.error === 'Utilisateur non connecté') {
+                        window.location.href = `login_register.html?redirect=${encodeURIComponent(window.location.href)}`;
+                    } else {
+                        notyf.error(data.error || 'Erreur lors de la création de la réservation');
+                        document.getElementById('confirm-booking').disabled = false;
+                        document.getElementById('confirm-booking').innerHTML = '<i class="fas fa-check mr-2"></i>Confirmer la réservation';
+                    }
+                }
+            } catch (error) {
+                console.error('Error creating reservation:', error);
+                notyf.error('Une erreur est survenue lors de la création de la réservation: ' + error.message);
+                document.getElementById('confirm-booking').disabled = false;
+                document.getElementById('confirm-booking').innerHTML = '<i class="fas fa-check mr-2"></i>Confirmer la réservation';
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Check authentication
+                const authenticated = await isAuthenticated();
+                if (!authenticated) {
+                    window.location.href = `login_register.html?redirect=${encodeURIComponent(window.location.href)}`;
+                    return;
+                }
+
+                // Check if all required parameters exist
+                if (!carId || !startDate || !endDate || !totalAmount || !days) {
+                    notyf.error('Informations de réservation manquantes');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                    return;
+                }
+
+                // Update navigation
+                await updateNavigation();
+                
+                // Load data
+                await loadUserDetails();
+                await loadCarDetails();
+                displayBookingDetails();
+                displayPriceDetails();
+
+                // Setup event listeners
+                document.getElementById('confirm-booking').addEventListener('click', handleConfirmBooking);
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                notyf.error('Une erreur est survenue lors du chargement de la page');
+            }
+        });
+    </script>
+</body>
+</html> 
