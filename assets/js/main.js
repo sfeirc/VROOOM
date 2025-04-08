@@ -5,6 +5,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Charger les marques et les types pour le formulaire de recherche
     loadBrandsAndTypes();
+    
+    // Gestion du formulaire de recherche
+    const searchForm = document.getElementById('search-form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const filters = getFilterValues();
+            const params = new URLSearchParams();
+            
+            if (filters.brand) params.append('marque', filters.brand);
+            if (filters.type) params.append('type', filters.type);
+            
+            // Rediriger à la page de recherche avec les filtres
+            window.location.href = `search.html${params.toString() ? '?' + params.toString() : ''}`;
+        });
+    }
 });
 
 async function loadFeaturedCars() {
@@ -17,6 +34,11 @@ async function loadFeaturedCars() {
         }
         
         const featuredCarsContainer = document.getElementById('featured-cars');
+        if (!featuredCarsContainer) {
+            console.log('Featured cars container not found');
+            return;
+        }
+        
         featuredCarsContainer.innerHTML = '';
         
         // Check authentication status
@@ -117,26 +139,4 @@ async function loadBrandsAndTypes() {
     } catch (error) {
         console.error('Error loading brands and types:', error);
     }
-}
-
-// Gestion du formulaire de recherche
-document.addEventListener('DOMContentLoaded', function() {
-    const searchForm = document.getElementById('search-form');
-    if (searchForm) {
-        searchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const filters = getFilterValues();
-            const params = new URLSearchParams();
-            
-            if (filters.brand) params.append('marque', filters.brand);
-            if (filters.type) params.append('type', filters.type);
-            
-            // Rediriger à la page de recherche avec les filtres
-            window.location.href = `search.html${params.toString() ? '?' + params.toString() : ''}`;
-        });
-    }
-
-    // Charger les voitures en vedette sur la page d'accueil
-    loadFeaturedCars();
-}); 
+} 
