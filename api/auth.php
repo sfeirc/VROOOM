@@ -41,17 +41,47 @@ try {
             $stmt->execute([':email' => $email]);
             $client = $stmt->fetch(PDO::FETCH_ASSOC);
             
+            // Si le client n'existe pas ou mot de passe incorrect, vérifier si c'est un administrateur
             if (!$client || !password_verify($password, $client['MdpClient'])) {
-                throw new Exception('Email ou mot de passe incorrect');
+                // Vérifier si c'est un administrateur
+                $stmt = $pdo->prepare("SELECT * FROM Administrateur WHERE MailAdmin = :email");
+                $stmt->execute([':email' => $email]);
+                $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$admin || !password_verify($password, $admin['MdpAdmin'])) {
+                    throw new Exception('Email ou mot de passe incorrect');
+                }
+                
+                // C'est un administrateur, créer la session admin
+                $_SESSION['user'] = [
+                    'id' => $admin['IdAdmin'],
+                    'email' => $admin['MailAdmin'],
+                    'nom' => $admin['NomAdmin'],
+                    'prenom' => $admin['PrenomAdmin'],
+                    'role' => 'admin'  // Indiquer que c'est un administrateur
+                ];
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Connexion administrateur réussie',
+                    'user' => [
+                        'email' => $admin['MailAdmin'],
+                        'nom' => $admin['NomAdmin'],
+                        'prenom' => $admin['PrenomAdmin'],
+                        'role' => 'admin'
+                    ]
+                ]);
+                break;
             }
             
-            // Créer la session
+            // C'est un client normal, créer la session client
             $_SESSION['user'] = [
                 'id' => $client['IdClient'],
                 'email' => $client['MailClient'],
                 'nom' => $client['NomClient'],
                 'prenom' => $client['PrenomClient'],
-                'photo' => $client['PhotoProfil']
+                'photo' => $client['PhotoProfil'],
+                'role' => 'client'  // Indiquer que c'est un client
             ];
             
             echo json_encode([
@@ -61,7 +91,8 @@ try {
                     'email' => $client['MailClient'],
                     'nom' => $client['NomClient'],
                     'prenom' => $client['PrenomClient'],
-                    'photo' => $client['PhotoProfil']
+                    'photo' => $client['PhotoProfil'],
+                    'role' => 'client'
                 ]
             ]);
             break;
@@ -170,7 +201,37 @@ try {
                 break;
             }
 
-            // Récupérer les données complètes de l'utilisateur dans la base de données
+            // Vérifier si c'est un admin ou un client
+            if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin') {
+                // Récupérer les données complètes de l'administrateur
+                $stmt = $pdo->prepare("SELECT * FROM Administrateur WHERE IdAdmin = :id");
+                $stmt->execute([':id' => $_SESSION['user']['id']]);
+                $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$userData) {
+                    echo json_encode([
+                        'success' => true,
+                        'isAuthenticated' => false
+                    ]);
+                    break;
+                }
+                
+                echo json_encode([
+                    'success' => true,
+                    'isAuthenticated' => true,
+                    'isAdmin' => true,
+                    'user' => [
+                        'id' => $userData['IdAdmin'],
+                        'email' => $userData['MailAdmin'],
+                        'nom' => $userData['NomAdmin'],
+                        'prenom' => $userData['PrenomAdmin'],
+                        'role' => 'admin'
+                    ]
+                ]);
+                break;
+            }
+
+            // C'est un client, récupérer les données complètes de l'utilisateur
             $stmt = $pdo->prepare("SELECT * FROM Client WHERE IdClient = :id");
             $stmt->execute([':id' => $_SESSION['user']['id']]);
             $userData = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -186,6 +247,7 @@ try {
             echo json_encode([
                 'success' => true,
                 'isAuthenticated' => true,
+                'isAdmin' => false,
                 'user' => [
                     'id' => $userData['IdClient'],
                     'email' => $userData['MailClient'],
@@ -194,7 +256,8 @@ try {
                     'tel' => $userData['TelClient'],
                     'adresse' => $userData['AdresseClient'],
                     'photo' => $userData['PhotoProfil'],
-                    'dateInscription' => $userData['DateInscription']
+                    'dateInscription' => $userData['DateInscription'],
+                    'role' => 'client'
                 ]
             ]);
             break;

@@ -17,6 +17,25 @@ async function isAuthenticated() {
     }
 }
 
+// Vérifie si l'utilisateur est un administrateur
+async function isAdmin() {
+    try {
+        const formData = new FormData();
+        formData.append('action', 'check-auth');
+        
+        const response = await fetch('api/auth.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        return data.success && data.isAuthenticated && data.isAdmin;
+    } catch (error) {
+        console.error('Error checking admin status:', error);
+        return false;
+    }
+}
+
 // Gestion de la tentative de réservation
 async function handleBookingAttempt(carId) {
     const authenticated = await isAuthenticated();
@@ -55,6 +74,7 @@ function closeLoginModal() {
 // Mettre à jour la navigation en fonction de l'état d'authentification
 async function updateNavigation() {
     const authenticated = await isAuthenticated();
+    const isAdminUser = await isAdmin();
     const navContainer = document.querySelector('.ml-10.flex.items-baseline.space-x-4');
     
     if (navContainer) {
@@ -70,10 +90,18 @@ async function updateNavigation() {
             
             const data = await response.json();
             
-            const authLinks = `
+            let authLinks = `
                 <a href="index.html" class="${window.location.pathname.endsWith('index.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Accueil</a>
                 <a href="search.html" class="${window.location.pathname.endsWith('search.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Rechercher</a>
-                <a href="contact.html" class="${window.location.pathname.endsWith('contact.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Contact</a>
+                <a href="contact.html" class="${window.location.pathname.endsWith('contact.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Contact</a>`;
+                
+            // Ajouter le lien vers le dashboard admin si l'utilisateur est un administrateur
+            if (isAdminUser) {
+                authLinks += `
+                <a href="admin-dashboard.php" class="${window.location.pathname.endsWith('admin-dashboard.php') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Dashboard Admin</a>`;
+            }
+            
+            authLinks += `
                 <div class="relative group" id="profile-menu">
                     <button onclick="window.location.href='profile.html'" class="flex items-center space-x-1 ${window.location.pathname.endsWith('profile.html') ? 'text-blue-600' : 'text-gray-800'} hover:text-blue-600 px-3 py-2 rounded-md font-medium">
                         <img src="${data.user.photo || 'assets/images/default-profile.png'}" alt="Profile" class="w-8 h-8 rounded-full object-cover border-2 border-blue-600">
@@ -86,7 +114,17 @@ async function updateNavigation() {
                         <div class="px-4 py-3 border-b border-gray-100">
                             <p class="text-sm text-gray-500">Connecté en tant que</p>
                             <p class="text-sm font-medium text-gray-900 truncate">${data.user.email}</p>
-                        </div>
+                            ${isAdminUser ? '<p class="text-xs font-medium text-blue-600 mt-1">Administrateur</p>' : ''}
+                        </div>`;
+                
+            // Afficher différentes options selon le type d'utilisateur
+            if (isAdminUser) {
+                authLinks += `
+                        <a href="admin-dashboard.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-tachometer-alt mr-2"></i> Dashboard Admin
+                        </a>`;
+            } else {
+                authLinks += `
                         <a href="profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                             <i class="fas fa-user-circle mr-2"></i> Mon Profil
                         </a>
@@ -95,7 +133,10 @@ async function updateNavigation() {
                         </a>
                         <a href="favorites.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                             <i class="fas fa-heart mr-2"></i> Mes Favoris
-                        </a>
+                        </a>`;
+            }
+            
+            authLinks += `
                         <div class="border-t border-gray-100 mt-2 pt-2">
                             <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                 <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
@@ -104,6 +145,12 @@ async function updateNavigation() {
                     </div>
                 </div>`;
             navContainer.innerHTML = authLinks;
+            
+            // Ajouter l'événement de déconnexion
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
         } else {
             const nonAuthLinks = `
                 <a href="index.html" class="${window.location.pathname.endsWith('index.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Accueil</a>
@@ -117,6 +164,26 @@ async function updateNavigation() {
     }
 }
 
+// Fonction de déconnexion
+async function logout() {
+    try {
+        const formData = new FormData();
+        formData.append('action', 'logout');
+        
+        const response = await fetch('api/auth.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            window.location.href = 'index.html';
+        }
+    } catch (error) {
+        console.error('Error during logout:', error);
+    }
+}
+
 // Initialiser la vérification de l'authentification au chargement de la page
 document.addEventListener('DOMContentLoaded', () => {
     updateNavigation();
@@ -127,4 +194,4 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.removeItem('pendingBooking');
         handleBookingAttempt(pendingBooking);
     }
-}); 
+});
