@@ -98,7 +98,7 @@ try {
     $stmt = $pdo->prepare("
         INSERT INTO Reservation (
             IdReservation, DateDebut, DateFin, MontantReservation,
-            Statut, IdClient, IdVoiture, DateReservation
+            Statut, IdUser, IdVoiture, DateReservation
         ) VALUES (
             :id, :startDate, :endDate, :amount,
             'En attente', :userId, :carId, NOW()

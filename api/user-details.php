@@ -13,10 +13,10 @@ try {
 
     // Récupérer les informations de l'utilisateur
     $stmt = $pdo->prepare("
-        SELECT IdClient, NomClient as Nom, PrenomClient as Prenom, MailClient as Email, 
-               TelClient as Telephone, AdresseClient as Adresse, PhotoProfil
-        FROM Client
-        WHERE IdClient = :userId
+        SELECT IdUser, Nom, Prenom, Email, 
+               Tel as Telephone, Adresse, PhotoProfil, IsAdmin
+        FROM Users
+        WHERE IdUser = :userId
     ");
     
     $stmt->execute([':userId' => $userId]);

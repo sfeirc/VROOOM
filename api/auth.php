@@ -16,8 +16,8 @@ function hashPassword($password) {
     return password_hash($password, PASSWORD_DEFAULT);
 }
 
-function generateClientId() {
-    return 'CLI' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+function generateUserId() {
+    return 'USR' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
 }
 
 try {
@@ -36,32 +36,34 @@ try {
                 throw new Exception('Email invalide');
             }
             
-            // vérifier si le client existe
-            $stmt = $pdo->prepare("SELECT * FROM Client WHERE MailClient = :email");
+            // Vérifier si l'utilisateur existe
+            $stmt = $pdo->prepare("SELECT * FROM Users WHERE Email = :email");
             $stmt->execute([':email' => $email]);
-            $client = $stmt->fetch(PDO::FETCH_ASSOC);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if (!$client || !password_verify($password, $client['MdpClient'])) {
+            if (!$user || !password_verify($password, $user['MotDePasse'])) {
                 throw new Exception('Email ou mot de passe incorrect');
             }
             
             // Créer la session
             $_SESSION['user'] = [
-                'id' => $client['IdClient'],
-                'email' => $client['MailClient'],
-                'nom' => $client['NomClient'],
-                'prenom' => $client['PrenomClient'],
-                'photo' => $client['PhotoProfil']
+                'id' => $user['IdUser'],
+                'email' => $user['Email'],
+                'nom' => $user['Nom'],
+                'prenom' => $user['Prenom'],
+                'photo' => $user['PhotoProfil'],
+                'role' => $user['IsAdmin'] ? 'admin' : 'client'
             ];
             
             echo json_encode([
                 'success' => true,
-                'message' => 'Connexion réussie',
+                'message' => $user['IsAdmin'] ? 'Connexion administrateur réussie' : 'Connexion réussie',
                 'user' => [
-                    'email' => $client['MailClient'],
-                    'nom' => $client['NomClient'],
-                    'prenom' => $client['PrenomClient'],
-                    'photo' => $client['PhotoProfil']
+                    'email' => $user['Email'],
+                    'nom' => $user['Nom'],
+                    'prenom' => $user['Prenom'],
+                    'photo' => $user['PhotoProfil'],
+                    'role' => $user['IsAdmin'] ? 'admin' : 'client'
                 ]
             ]);
             break;
@@ -93,10 +95,10 @@ try {
             }
             
             // Définir les valeurs par défaut pour les champs optionnels
-            $tel = empty($tel) ? '0000000000' : $tel;
+            $tel = empty($tel) ? NULL : $tel;
             
             // Vérifier si l'email existe déjà
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM Client WHERE MailClient = :email");
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM Users WHERE Email = :email");
             $stmt->execute([':email' => $email]);
             if ($stmt->fetchColumn() > 0) {
                 throw new Exception('Cet email est déjà utilisé');
@@ -106,21 +108,22 @@ try {
             $pdo->beginTransaction();
             
             try {
-                // Générer l'ID du client
-                $clientId = generateClientId();
+                // Générer l'ID de l'utilisateur
+                $userId = generateUserId();
                 
-                // Créer le client
+                // Créer l'utilisateur
                 $stmt = $pdo->prepare("
-                    INSERT INTO Client (
-                        IdClient,
-                        NomClient,
-                        PrenomClient,
-                        MailClient,
-                        TelClient,
-                        AdresseClient,
-                        MdpClient,
+                    INSERT INTO Users (
+                        IdUser,
+                        Nom,
+                        Prenom,
+                        Email,
+                        Tel,
+                        Adresse,
+                        MotDePasse,
                         DateInscription,
-                        PhotoProfil
+                        PhotoProfil,
+                        IsAdmin
                     ) VALUES (
                         :id,
                         :nom,
@@ -130,12 +133,13 @@ try {
                         :adresse,
                         :password,
                         NOW(),
-                        :photo
+                        :photo,
+                        0
                     )
                 ");
                 
                 $result = $stmt->execute([
-                    ':id' => $clientId,
+                    ':id' => $userId,
                     ':nom' => $nom,
                     ':prenom' => $prenom,
                     ':email' => $email,
@@ -171,7 +175,7 @@ try {
             }
 
             // Récupérer les données complètes de l'utilisateur dans la base de données
-            $stmt = $pdo->prepare("SELECT * FROM Client WHERE IdClient = :id");
+            $stmt = $pdo->prepare("SELECT * FROM Users WHERE IdUser = :id");
             $stmt->execute([':id' => $_SESSION['user']['id']]);
             $userData = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -182,19 +186,23 @@ try {
                 ]);
                 break;
             }
+            
+            $isAdmin = (bool)$userData['IsAdmin'];
 
             echo json_encode([
                 'success' => true,
                 'isAuthenticated' => true,
+                'isAdmin' => $isAdmin,
                 'user' => [
-                    'id' => $userData['IdClient'],
-                    'email' => $userData['MailClient'],
-                    'nom' => $userData['NomClient'],
-                    'prenom' => $userData['PrenomClient'],
-                    'tel' => $userData['TelClient'],
-                    'adresse' => $userData['AdresseClient'],
+                    'id' => $userData['IdUser'],
+                    'email' => $userData['Email'],
+                    'nom' => $userData['Nom'],
+                    'prenom' => $userData['Prenom'],
+                    'tel' => $userData['Tel'],
+                    'adresse' => $userData['Adresse'],
                     'photo' => $userData['PhotoProfil'],
-                    'dateInscription' => $userData['DateInscription']
+                    'dateInscription' => $userData['DateInscription'],
+                    'role' => $isAdmin ? 'admin' : 'client'
                 ]
             ]);
             break;
@@ -230,7 +238,7 @@ try {
             }
 
             // Vérifier si l'email est déjà utilisé par un autre utilisateur
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM Client WHERE MailClient = :email AND IdClient != :id");
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM Users WHERE Email = :email AND IdUser != :id");
             $stmt->execute([
                 ':email' => $email,
                 ':id' => $_SESSION['user']['id']
@@ -245,13 +253,13 @@ try {
             try {
                 // mettre à jour les informations de base
                 $stmt = $pdo->prepare("
-                    UPDATE Client 
-                    SET NomClient = :nom,
-                        PrenomClient = :prenom,
-                        MailClient = :email,
-                        TelClient = :tel,
-                        AdresseClient = :adresse
-                    WHERE IdClient = :id
+                    UPDATE Users 
+                    SET Nom = :nom,
+                        Prenom = :prenom,
+                        Email = :email,
+                        Tel = :tel,
+                        Adresse = :adresse
+                    WHERE IdUser = :id
                 ");
 
                 $stmt->execute([
@@ -270,16 +278,16 @@ try {
                     }
 
                     // Vérifier le mot de passe actuel
-                    $stmt = $pdo->prepare("SELECT MdpClient FROM Client WHERE IdClient = :id");
+                    $stmt = $pdo->prepare("SELECT MotDePasse FROM Users WHERE IdUser = :id");
                     $stmt->execute([':id' => $_SESSION['user']['id']]);
-                    $client = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                    if (!password_verify($currentPassword, $client['MdpClient'])) {
+                    if (!password_verify($currentPassword, $user['MotDePasse'])) {
                         throw new Exception('Mot de passe actuel incorrect');
                     }
 
                     // mettre à jour le mot de passe
-                    $stmt = $pdo->prepare("UPDATE Client SET MdpClient = :password WHERE IdClient = :id");
+                    $stmt = $pdo->prepare("UPDATE Users SET MotDePasse = :password WHERE IdUser = :id");
                     $stmt->execute([
                         ':password' => hashPassword($newPassword),
                         ':id' => $_SESSION['user']['id']

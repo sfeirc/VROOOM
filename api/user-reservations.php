@@ -34,7 +34,7 @@ try {
         JOIN
             TypeVehicule t ON v.IdType = t.IdType
         WHERE 
-            r.IdClient = :userId
+            r.IdUser = :userId
         ORDER BY 
             r.DateReservation DESC
     ");
