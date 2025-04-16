@@ -39,9 +39,6 @@ async function checkAuthAndUpdateNav() {
                         <a href="mes-reservations.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                             <i class="fas fa-calendar-alt mr-2"></i> Mes Réservations
                         </a>
-                        <a href="favorites.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                            <i class="fas fa-heart mr-2"></i> Mes Favoris
-                        </a>
                         <div class="border-t border-gray-100 mt-2 pt-2">
                             <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                 <i class="fas fa-sign-out-alt mr-2"></i> Déconnexion
