@@ -273,8 +273,13 @@
                     document.getElementById('start-date').textContent = startDate.toLocaleDateString('fr-FR');
                     document.getElementById('end-date').textContent = endDate.toLocaleDateString('fr-FR');
                     document.getElementById('duration').textContent = diffDays;
-                    document.getElementById('daily-price').textContent = parseFloat(reservation.Prix).toFixed(2);
-                    document.getElementById('total-amount').textContent = parseFloat(reservation.MontantReservation).toFixed(2);
+                    
+                    // Calculate daily price by dividing total by duration
+                    const totalAmount = parseFloat(reservation.MontantReservation);
+                    const dailyPrice = diffDays > 0 ? totalAmount / diffDays : totalAmount;
+                    
+                    document.getElementById('daily-price').textContent = dailyPrice.toFixed(2);
+                    document.getElementById('total-amount').textContent = totalAmount.toFixed(2);
                 } catch (error) {
                     console.error("Erreur lors de l'affichage des détails:", error);
                     console.error("Données reçues:", reservation);
