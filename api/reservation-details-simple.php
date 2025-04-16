@@ -59,7 +59,7 @@ try {
     // 5. Récupérer le type
     if ($car) {
         $stmt = $pdo->prepare("
-            SELECT * FROM TypeVoiture WHERE IdType = :id
+            SELECT * FROM TypeVehicule WHERE IdType = :id
         ");
         $stmt->execute([':id' => $car['IdType']]);
         $type = $stmt->fetch(PDO::FETCH_ASSOC);

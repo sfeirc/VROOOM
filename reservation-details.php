@@ -258,12 +258,14 @@
             
             // Fonction pour charger les détails de la réservation
             function loadReservationDetails(id) {
-                fetch('api/reservation-details-simple.php?id=' + id)
+                fetch('api/reservation-details-super-simple.php?id=' + id)
                 .then(response => response.json())
                 .then(data => {
+                    console.log("API response:", data);
                     if (data.success) {
                         displayReservationDetails(data.reservation);
                     } else {
+                        console.error("API error:", data.message);
                         notyf.error(data.message || 'Erreur lors du chargement des détails');
                         setTimeout(() => {
                             window.location.href = 'admin-dashboard.php';
