@@ -284,68 +284,77 @@
             
             // Fonction pour afficher les détails de la réservation
             function displayReservationDetails(reservation) {
-                // Informations de réservation
-                document.getElementById('reservation-id').textContent = reservation.IdReservation;
-                
-                const dateReservation = new Date(reservation.DateReservation);
-                document.getElementById('date-reservation').textContent = dateReservation.toLocaleDateString('fr-FR', { 
-                    day: 'numeric', 
-                    month: 'long', 
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                // Statut de réservation
-                const statusBadge = document.getElementById('status-badge');
-                statusBadge.textContent = reservation.Statut;
-                
-                let statusClass = '';
-                switch (reservation.Statut) {
-                    case 'En attente': statusClass = 'bg-yellow-100 text-yellow-800'; break;
-                    case 'Confirmée': statusClass = 'bg-blue-100 text-blue-800'; break;
-                    case 'En cours': statusClass = 'bg-purple-100 text-purple-800'; break;
-                    case 'Terminée': statusClass = 'bg-green-100 text-green-800'; break;
-                    case 'Annulée': statusClass = 'bg-red-100 text-red-800'; break;
+                try {
+                    console.log("Reservation data:", reservation);
+                    
+                    // Informations de réservation
+                    document.getElementById('reservation-id').textContent = reservation.IdReservation;
+                    
+                    const dateReservation = new Date(reservation.DateReservation);
+                    document.getElementById('date-reservation').textContent = dateReservation.toLocaleDateString('fr-FR', { 
+                        day: 'numeric', 
+                        month: 'long', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    // Statut de réservation
+                    const statusBadge = document.getElementById('status-badge');
+                    statusBadge.textContent = reservation.Statut;
+                    
+                    let statusClass = '';
+                    switch (reservation.Statut) {
+                        case 'En attente': statusClass = 'bg-yellow-100 text-yellow-800'; break;
+                        case 'Confirmée': statusClass = 'bg-blue-100 text-blue-800'; break;
+                        case 'En cours': statusClass = 'bg-purple-100 text-purple-800'; break;
+                        case 'Terminée': statusClass = 'bg-green-100 text-green-800'; break;
+                        case 'Annulée': statusClass = 'bg-red-100 text-red-800'; break;
+                    }
+                    statusBadge.className = `px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${statusClass}`;
+                    
+                    // Informations client
+                    document.getElementById('client-name').textContent = `${reservation.Prenom} ${reservation.Nom}`;
+                    document.getElementById('client-email').textContent = reservation.Email || 'Non spécifié';
+                    document.getElementById('client-phone').textContent = reservation.Tel || 'Non spécifié';
+                    document.getElementById('client-address').textContent = reservation.Adresse || 'Non spécifiée';
+                    
+                    // Informations véhicule
+                    document.getElementById('car-model').textContent = `${reservation.NomMarque} ${reservation.Modele}`;
+                    document.getElementById('car-type').textContent = reservation.NomType;
+                    document.getElementById('car-year').textContent = reservation.Annee;
+                    document.getElementById('car-color').textContent = reservation.Couleur;
+                    
+                    // Map status ID to display name
+                    let carStatusText = 'Inconnu';
+                    switch (reservation.IdStatut) {
+                        case 'STAT001': carStatusText = 'Disponible'; break;
+                        case 'STAT002': carStatusText = 'Louée'; break;
+                        case 'STAT003': carStatusText = 'En maintenance'; break;
+                        default: carStatusText = `${reservation.IdStatut} (Status non reconnu)`;
+                    }
+                    document.getElementById('car-status').textContent = carStatusText;
+                    
+                    // Informations location
+                    const startDate = new Date(reservation.DateDebut);
+                    const endDate = new Date(reservation.DateFin);
+                    const diffTime = Math.abs(endDate - startDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    document.getElementById('start-date').textContent = startDate.toLocaleDateString('fr-FR');
+                    document.getElementById('end-date').textContent = endDate.toLocaleDateString('fr-FR');
+                    document.getElementById('duration').textContent = diffDays;
+                    document.getElementById('daily-price').textContent = parseFloat(reservation.Prix).toFixed(2);
+                    document.getElementById('total-amount').textContent = parseFloat(reservation.MontantReservation).toFixed(2);
+                    
+                    // Préparer l'email pour la modal
+                    document.getElementById('email-to').value = reservation.Email;
+                    document.getElementById('email-subject').value = `Votre réservation #${reservation.IdReservation} chez Vroom Prestige`;
+                } catch (error) {
+                    console.error("Erreur lors de l'affichage des détails:", error);
+                    console.error("Données reçues:", reservation);
+                    notyf.error("Erreur lors de l'affichage des détails de réservation");
                 }
-                statusBadge.className = `px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${statusClass}`;
-                
-                // Informations client
-                document.getElementById('client-name').textContent = `${reservation.Prenom} ${reservation.Nom}`;
-                document.getElementById('client-email').textContent = reservation.Email || 'Non spécifié';
-                document.getElementById('client-phone').textContent = reservation.Tel || 'Non spécifié';
-                document.getElementById('client-address').textContent = reservation.Adresse || 'Non spécifiée';
-                
-                // Informations véhicule
-                document.getElementById('car-model').textContent = `${reservation.NomMarque} ${reservation.Modele}`;
-                document.getElementById('car-type').textContent = reservation.NomType;
-                document.getElementById('car-year').textContent = reservation.Annee;
-                document.getElementById('car-color').textContent = reservation.Couleur;
-                
-                // Map status ID to display name
-                let carStatusText = 'Inconnu';
-                switch (reservation.IdStatut) {
-                    case 'STAT001': carStatusText = 'Disponible'; break;
-                    case 'STAT002': carStatusText = 'Louée'; break;
-                    case 'STAT003': carStatusText = 'En maintenance'; break;
-                }
-                document.getElementById('car-status').textContent = carStatusText;
-                
-                // Informations location
-                const startDate = new Date(reservation.DateDebut);
-                const endDate = new Date(reservation.DateFin);
-                const diffTime = Math.abs(endDate - startDate);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                document.getElementById('start-date').textContent = startDate.toLocaleDateString('fr-FR');
-                document.getElementById('end-date').textContent = endDate.toLocaleDateString('fr-FR');
-                document.getElementById('duration').textContent = diffDays;
-                document.getElementById('daily-price').textContent = parseFloat(reservation.Prix).toFixed(2);
-                document.getElementById('total-amount').textContent = parseFloat(reservation.MontantReservation).toFixed(2);
-                
-                // Préparer l'email pour la modal
-                document.getElementById('email-to').value = reservation.Email;
-                document.getElementById('email-subject').value = `Votre réservation #${reservation.IdReservation} chez Vroom Prestige`;
             }
             
             // Fonction pour ouvrir la modal de statut
