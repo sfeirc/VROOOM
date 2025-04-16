@@ -117,22 +117,33 @@
         let selectedEndDate = null;
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
+        let bookedDates = []; // Pour stocker les périodes déjà réservées
 
-        // Charger les détails de la voiture
+        // Charger les détails de la voiture et les dates réservées
         async function loadCarDetails() {
             try {
-                const response = await fetch(`api/car-details.php?id=${carId}`);
-                const data = await response.json();
+                // Charger les détails de la voiture
+                const carResponse = await fetch(`api/car-details.php?id=${carId}`);
+                const carData = await carResponse.json();
 
-                if (data.success) {
+                // Charger les périodes déjà réservées
+                const availabilityResponse = await fetch(`api/car-availability.php?car_id=${carId}`);
+                const availabilityData = await availabilityResponse.json();
+                
+                if (availabilityData.success) {
+                    bookedDates = availabilityData.booked_periods;
+                    console.log('Périodes réservées:', bookedDates);
+                }
+
+                if (carData.success) {
                     const carDetailsHtml = `
                         <div class="p-4">
                             <div class="w-full h-[300px] bg-center bg-no-repeat bg-cover rounded-xl relative" 
-                                style="background-image: url('${data.car.Photo}');">
+                                style="background-image: url('${carData.car.Photo}');">
                             </div>
                         </div>
                         <h1 class="text-[#333] tracking-light text-[32px] font-bold leading-tight px-4 text-left pb-3">
-                            ${data.car.NomMarque} ${data.car.Modele}
+                            ${carData.car.NomMarque} ${carData.car.Modele}
                         </h1>
                         <div class="p-4">
                             <h2 class="text-[#333] text-xl font-bold mb-4">Informations générales</h2>
@@ -142,35 +153,35 @@
                                         <i class="fas fa-car text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Marque</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.NomMarque}</p>
+                                    <p class="text-[#333] font-medium">${carData.car.NomMarque}</p>
                                 </div>
                                 <div class="bg-[#f8f9fa] p-4 rounded-lg">
                                     <div class="flex items-center gap-2 mb-2">
                                         <i class="fas fa-car-side text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Modèle</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.Modele}</p>
+                                    <p class="text-[#333] font-medium">${carData.car.Modele}</p>
                                 </div>
                                 <div class="bg-[#f8f9fa] p-4 rounded-lg">
                                     <div class="flex items-center gap-2 mb-2">
                                         <i class="fas fa-calendar-alt text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Année</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.Annee}</p>
+                                    <p class="text-[#333] font-medium">${carData.car.Annee}</p>
                                 </div>
                                 <div class="bg-[#f8f9fa] p-4 rounded-lg">
                                     <div class="flex items-center gap-2 mb-2">
                                         <i class="fas fa-tag text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Type</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.NomType}</p>
+                                    <p class="text-[#333] font-medium">${carData.car.NomType}</p>
                                 </div>
                                 <div class="bg-[#f8f9fa] p-4 rounded-lg">
                                     <div class="flex items-center gap-2 mb-2">
                                         <i class="fas fa-euro-sign text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Prix journalier</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.PrixLocation}€ / jour</p>
+                                    <p class="text-[#333] font-medium">${carData.car.PrixLocation}€ / jour</p>
                                 </div>
                             </div>
                         </div>
@@ -182,56 +193,59 @@
                                         <i class="fas fa-gas-pump text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Énergie</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.Energie || 'Non spécifié'}</p>
+                                    <p class="text-[#333] font-medium">${carData.car.Energie || 'Non spécifié'}</p>
                                 </div>
                                 <div class="bg-[#f8f9fa] p-4 rounded-lg">
                                     <div class="flex items-center gap-2 mb-2">
                                         <i class="fas fa-cogs text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Boîte de vitesse</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.BoiteVitesse || 'Non spécifié'}</p>
+                                    <p class="text-[#333] font-medium">${carData.car.BoiteVitesse || 'Non spécifié'}</p>
                                 </div>
                                 <div class="bg-[#f8f9fa] p-4 rounded-lg">
                                     <div class="flex items-center gap-2 mb-2">
                                         <i class="fas fa-door-open text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Nombre de portes</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.NbPorte || 'Non spécifié'}</p>
+                                    <p class="text-[#333] font-medium">${carData.car.NbPorte || 'Non spécifié'}</p>
                                 </div>
                                 <div class="bg-[#f8f9fa] p-4 rounded-lg">
                                     <div class="flex items-center gap-2 mb-2">
                                         <i class="fas fa-users text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Places</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.NbPlaces || 'Non spécifié'}</p>
+                                    <p class="text-[#333] font-medium">${carData.car.NbPlaces || 'Non spécifié'}</p>
                                 </div>
                                 <div class="bg-[#f8f9fa] p-4 rounded-lg">
                                     <div class="flex items-center gap-2 mb-2">
                                         <i class="fas fa-palette text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Couleur</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.Couleur || 'Non spécifié'}</p>
+                                    <p class="text-[#333] font-medium">${carData.car.Couleur || 'Non spécifié'}</p>
                                 </div>
                                 <div class="bg-[#f8f9fa] p-4 rounded-lg">
                                     <div class="flex items-center gap-2 mb-2">
                                         <i class="fas fa-tachometer-alt text-[#007bff]"></i>
                                         <span class="text-[#6c757d] text-sm">Puissance</span>
                                     </div>
-                                    <p class="text-[#333] font-medium">${data.car.Puissance ? data.car.Puissance + ' ch' : 'Non spécifié'}</p>
+                                    <p class="text-[#333] font-medium">${carData.car.Puissance ? carData.car.Puissance + ' ch' : 'Non spécifié'}</p>
                                 </div>
                             </div>
-                            ${data.car.Description ? `
+                            ${carData.car.Description ? `
                             <div class="mt-6 bg-[#f8f9fa] p-4 rounded-lg">
                                 <div class="flex items-center gap-2 mb-2">
                                     <i class="fas fa-info-circle text-[#007bff]"></i>
                                     <span class="text-[#6c757d] text-sm">Description</span>
                                 </div>
-                                <p class="text-[#333]">${data.car.Description}</p>
+                                <p class="text-[#333]">${carData.car.Description}</p>
                             </div>
                             ` : ''}
                         </div>
                     `;
                     document.getElementById('car-details').innerHTML = carDetailsHtml;
+                    
+                    // Une fois les données chargées, générer le calendrier
+                    generateCalendar();
                 } else {
                     notyf.error('Erreur lors du chargement des détails du véhicule');
                 }
@@ -239,6 +253,24 @@
                 console.error('Error loading car details:', error);
                 notyf.error('Une erreur est survenue');
             }
+        }
+
+        // Vérifier si une date est réservée
+        function isDateBooked(date) {
+            const dateTime = date.getTime();
+            
+            // Vérifier chaque période réservée
+            for (const period of bookedDates) {
+                const startDate = new Date(period.start).getTime();
+                const endDate = new Date(period.end).getTime();
+                
+                // Si la date est dans une période réservée, elle n'est pas disponible
+                if (dateTime >= startDate && dateTime <= endDate) {
+                    return true;
+                }
+            }
+            
+            return false;
         }
 
         // Générer le calendrier
@@ -281,12 +313,22 @@
                 button.className = 'calendar-day h-12 w-full text-[#333] text-sm font-medium leading-normal';
                 button.innerHTML = `<div class="flex size-full items-center justify-center rounded-full">${day}</div>`;
                 
-                // Désactiver les dates passées du mois actuel et de l'année actuelle
-                if (currentYear < today.getFullYear() || 
-                    (currentYear === today.getFullYear() && currentMonth < today.getMonth()) ||
-                    (currentYear === today.getFullYear() && currentMonth === today.getMonth() && day < today.getDate())) {
+                // Vérifier si la date est passée ou réservée
+                const isPastDate = currentYear < today.getFullYear() || 
+                                  (currentYear === today.getFullYear() && currentMonth < today.getMonth()) ||
+                                  (currentYear === today.getFullYear() && currentMonth === today.getMonth() && day < today.getDate());
+                
+                const isBookedDate = isDateBooked(date);
+                
+                if (isPastDate || isBookedDate) {
                     button.disabled = true;
                     button.classList.add('opacity-50');
+                    
+                    // Ajouter un indicateur visuel pour les dates réservées
+                    if (isBookedDate && !isPastDate) {
+                        button.title = "Ce jour est déjà réservé";
+                        button.querySelector('div').classList.add('bg-red-100');
+                    }
                 } else {
                     button.addEventListener('click', () => handleDateSelection(date));
                 }
@@ -462,7 +504,6 @@
             // Initialiser la page
             updateNavigation();
             loadCarDetails();
-            generateCalendar();
 
             // Ajouter des écouteurs d'événements pour la navigation du calendrier
             document.getElementById('prev-month').addEventListener('click', previousMonth);
