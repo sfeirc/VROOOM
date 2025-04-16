@@ -258,13 +258,7 @@
             
             // Fonction pour charger les détails de la réservation
             function loadReservationDetails(id) {
-                fetch('api/admin.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `action=get_reservation_details&reservation_id=${id}`
-                })
+                fetch('api/reservation-details-simple.php?id=' + id)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
