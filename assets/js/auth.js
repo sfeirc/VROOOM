@@ -1,21 +1,22 @@
 // Vérifier l'état d'authentification et mettre à jour la barre de navigation
 async function checkAuthAndUpdateNav() {
     try {
+        // Préparer la requête
         const formData = new FormData();
         formData.append('action', 'check-auth');
-        
+        // Exécuter la requête
         const response = await fetch('api/auth.php', {
             method: 'POST',
             body: formData
         });
-        
+        // Récupérer les données
         const data = await response.json();
-        
         // Récupérer le conteneur de navigation
         const navContainer = document.querySelector('.ml-10.flex.items-baseline.space-x-4');
-        
+        // Vérifier si l'utilisateur est connecté
         if (data.success && data.isAuthenticated) {
             // L'utilisateur est connecté
+            // Créer les liens d'authentification
             const authLinks = `
                 <a href="index.html" class="${window.location.pathname.endsWith('index.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Accueil</a>
                 <a href="search.html" class="${window.location.pathname.endsWith('search.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Rechercher</a>
@@ -47,14 +48,14 @@ async function checkAuthAndUpdateNav() {
                     </div>
                 </div>
             `;
+            // Mettre à jour le contenu de la navigation
             navContainer.innerHTML = authLinks;
-            
             // Gestion de la déconnexion
             document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
                 e.preventDefault();
                 await logout();
             });
-
+            
             // Fermer le menu déroulant lors d'un clic en dehors
             document.addEventListener('click', (e) => {
                 const profileMenu = document.getElementById('profile-menu');
@@ -96,11 +97,13 @@ async function logout() {
         const data = await response.json();
         
         if (data.success) {
+            // Rediriger vers la page d'accueil
             window.location.href = 'index.html';
         }
     } catch (error) {
         console.error('Error logging out:', error);
-        if (window.notyf) {
+            if (window.notyf) {
+            // Afficher une notification d'erreur
             notyf.error('Erreur lors de la déconnexion');
         }
     }

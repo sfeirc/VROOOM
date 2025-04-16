@@ -1,8 +1,9 @@
 <?php
+// Gestion des erreurs
 require_once '../config/database.php';
-
+// Gestion des en-têtes
 header('Content-Type: application/json');
-
+// Gestion des erreurs
 try {
     // Conditions de base pour les voitures actives
     $conditions = ['v.IdStatut = :status'];
@@ -82,7 +83,7 @@ try {
         WHERE {$whereClause}
         ORDER BY {$orderBy}
     ";
-
+    // Préparer la requête
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     $cars = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -102,25 +103,29 @@ try {
                 )
                 AND Statut NOT IN ('Annulée')
             ");
-            
+            // Exécuter la requête
             $availabilityStmt->execute([
                 ':idVoiture' => $car['IdVoiture'],
                 ':dateDebut' => $_GET['date_debut'],
                 ':dateFin' => $_GET['date_fin']
             ]);
-            
+            // Récupérer le résultat
             $result = $availabilityStmt->fetch(PDO::FETCH_ASSOC);
+            // Vérifier si la voiture est disponible
             $car['isAvailable'] = $result['count'] == 0;
         } else {
             $car['isAvailable'] = true;
         }
     }
-
     // Retourner les résultats en JSON
     echo json_encode($cars);
+// Gestion des erreurs
 } catch(PDOException $e) {
-    // En cas d'erreur, retourner un code 500 et le message d'erreur
+    // Log l'erreur
+    error_log("Erreur API recherche: " . $e->getMessage());
+    // Retourner un code 500 et le message d'erreur
     http_response_code(500);
+    // Retourner une réponse d'erreur
     echo json_encode(['error' => 'Erreur de base de données: ' . $e->getMessage()]);
 }
 ?> 

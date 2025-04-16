@@ -1,29 +1,30 @@
 <?php
 require_once '../config/database.php';
-
+// Gestion des en-têtes
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
-
+// Gestion des sessions
 session_start();
-
+// Fonction pour valider l'email
 function validateEmail($email) {
     return filter_var($email, FILTER_VALIDATE_EMAIL);
 }
-
+// Fonction pour hacher le mot de passe
 function hashPassword($password) {
     return password_hash($password, PASSWORD_DEFAULT);
 }
-
+// Fonction pour générer un ID d'utilisateur
 function generateUserId() {
     return 'USR' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
 }
-
+// Gestion des actions
 try {
     $action = $_POST['action'] ?? '';
     
     switch ($action) {
+        // Gestion de la connexion
         case 'login':
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
@@ -31,20 +32,19 @@ try {
             if (empty($email) || empty($password)) {
                 throw new Exception('Tous les champs sont obligatoires');
             }
-            
+            // Vérifier si l'email est valide
             if (!validateEmail($email)) {
                 throw new Exception('Email invalide');
             }
-            
             // Vérifier si l'utilisateur existe
             $stmt = $pdo->prepare("SELECT * FROM Users WHERE Email = :email");
             $stmt->execute([':email' => $email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+            // Vérifier si l'utilisateur existe et si le mot de passe est correct
             if (!$user || !password_verify($password, $user['MotDePasse'])) {
                 throw new Exception('Email ou mot de passe incorrect');
             }
-            
+
             // Créer la session
             $_SESSION['user'] = [
                 'id' => $user['IdUser'],
@@ -54,7 +54,7 @@ try {
                 'photo' => $user['PhotoProfil'],
                 'role' => $user['IsAdmin'] ? 'admin' : 'client'
             ];
-            
+            // Retourner une réponse de succès
             echo json_encode([
                 'success' => true,
                 'message' => $user['IsAdmin'] ? 'Connexion administrateur réussie' : 'Connexion réussie',
@@ -67,7 +67,7 @@ try {
                 ]
             ]);
             break;
-            
+        // Gestion de l'inscription
         case 'register':
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
@@ -81,19 +81,19 @@ try {
             if (empty($email) || empty($password) || empty($nom) || empty($prenom)) {
                 throw new Exception('Les champs nom, prénom, email et mot de passe sont obligatoires');
             }
-            
+            // Vérifier si l'email est valide
             if (!validateEmail($email)) {
                 throw new Exception('Email invalide');
             }
-            
+            // Vérifier si les mots de passe correspondent
             if ($password !== $confirmPassword) {
                 throw new Exception('Les mots de passe ne correspondent pas');
             }
-            
+            // Vérifier si le mot de passe est suffisamment long
             if (strlen($password) < 8) {
                 throw new Exception('Le mot de passe doit contenir au moins 8 caractères');
             }
-            
+
             // Définir les valeurs par défaut pour les champs optionnels
             $tel = empty($tel) ? NULL : $tel;
             
@@ -103,14 +103,13 @@ try {
             if ($stmt->fetchColumn() > 0) {
                 throw new Exception('Cet email est déjà utilisé');
             }
-            
             // Début de la transaction
             $pdo->beginTransaction();
-            
+            // Générer l'ID de l'utilisateur
             try {
                 // Générer l'ID de l'utilisateur
                 $userId = generateUserId();
-                
+
                 // Créer l'utilisateur
                 $stmt = $pdo->prepare("
                     INSERT INTO Users (
@@ -137,7 +136,7 @@ try {
                         0
                     )
                 ");
-                
+                // Exécuter la requête
                 $result = $stmt->execute([
                     ':id' => $userId,
                     ':nom' => $nom,
@@ -148,13 +147,13 @@ try {
                     ':password' => hashPassword($password),
                     ':photo' => 'assets/images/default-profile.png'
                 ]);
-                
+                // Vérifier si la requête a échoué
                 if (!$result) {
                     throw new Exception('Erreur lors de l\'insertion dans la base de données');
                 }
-                
+                // Valider la transaction
                 $pdo->commit();
-                
+                // Retourner une réponse de succès
                 echo json_encode([
                     'success' => true,
                     'message' => 'Inscription réussie'
@@ -164,7 +163,7 @@ try {
                 throw new Exception('Erreur lors de l\'inscription: ' . $e->getMessage());
             }
             break;
-            
+        //   Gestion de la vérification de l'authentification
         case 'check-auth':
             if (!isset($_SESSION['user'])) {
                 echo json_encode([
@@ -178,7 +177,7 @@ try {
             $stmt = $pdo->prepare("SELECT * FROM Users WHERE IdUser = :id");
             $stmt->execute([':id' => $_SESSION['user']['id']]);
             $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-
+            // Vérifier si l'utilisateur existe
             if (!$userData) {
                 echo json_encode([
                     'success' => true,
@@ -186,20 +185,23 @@ try {
                 ]);
                 break;
             }
-            
+            // Vérifier si l'utilisateur est un administrateur
             $isAdmin = (bool)$userData['IsAdmin'];
-            
-            // Compter le nombre de réservations pour cet utilisateur
+            // Compter le nombre de réservations pour cet utilisateur   
             $reservationCount = 0;
             try {
+                // Préparer la requête
                 $reservationStmt = $pdo->prepare("SELECT COUNT(*) FROM Reservation WHERE IdUser = :userId");
+                // Exécuter la requête
                 $reservationStmt->execute([':userId' => $_SESSION['user']['id']]);
+                // Récupérer le nombre de réservations
                 $reservationCount = (int)$reservationStmt->fetchColumn();
             } catch (PDOException $e) {
+                // Gérer l'erreur
                 error_log("Erreur lors du comptage des réservations: " . $e->getMessage());
                 // Ne pas faire échouer toute la requête pour cette erreur
             }
-
+            // Retourner une réponse de succès
             echo json_encode([
                 'success' => true,
                 'isAuthenticated' => true,
@@ -218,7 +220,7 @@ try {
                 ]
             ]);
             break;
-            
+        // Gestion de la déconnexion
         case 'logout':
             session_destroy();
             echo json_encode([
@@ -226,12 +228,12 @@ try {
                 'message' => 'Déconnexion réussie'
             ]);
             break;
-            
+        // Gestion de la mise à jour du profil
         case 'update_profile':
             if (!isset($_SESSION['user'])) {
                 throw new Exception('Vous devez être connecté pour modifier votre profil');
             }
-
+            // Récupérer les données du profil
             $nom = $_POST['nom'] ?? '';
             $prenom = $_POST['prenom'] ?? '';
             $email = $_POST['email'] ?? '';
@@ -240,11 +242,11 @@ try {
             $currentPassword = $_POST['current_password'] ?? '';
             $newPassword = $_POST['new_password'] ?? '';
             $confirmPassword = $_POST['confirm_password'] ?? '';
-
+            // Vérifier si les champs obligatoires sont remplis
             if (empty($nom) || empty($prenom) || empty($email)) {
                 throw new Exception('Les champs nom, prénom et email sont obligatoires');
             }
-
+            // Vérifier si l'email est valide
             if (!validateEmail($email)) {
                 throw new Exception('Email invalide');
             }
@@ -261,7 +263,7 @@ try {
 
             // Début de la transaction
             $pdo->beginTransaction();
-
+            // Essayer de mettre à jour les informations de base
             try {
                 // mettre à jour les informations de base
                 $stmt = $pdo->prepare("

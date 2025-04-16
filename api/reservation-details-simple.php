@@ -4,17 +4,19 @@ require_once '../config/database.php';
 header('Content-Type: application/json');
 session_start();
 
-// Get the reservation ID from the request
+// Récupérer l'ID de la réservation
 $reservationId = $_REQUEST['id'] ?? '';
 
+// Vérifier si l'ID de la réservation est vide  
 if (empty($reservationId)) {
+    // Retourner une réponse d'erreur
     echo json_encode([
         'success' => false,
         'message' => 'ID de réservation requis'
     ]);
     exit;
 }
-
+// Gestion des erreurs
 try {
     // 1. Récupérer la réservation basique
     $stmt = $pdo->prepare("
@@ -22,22 +24,23 @@ try {
     ");
     $stmt->execute([':id' => $reservationId]);
     $reservation = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+    // Vérifier si la réservation existe
     if (!$reservation) {
+        // Retourner une réponse d'erreur
         echo json_encode([
             'success' => false,
             'message' => 'Réservation non trouvée'
         ]);
         exit;
     }
-    
+
     // 2. Récupérer les informations de l'utilisateur
     $stmt = $pdo->prepare("
         SELECT * FROM Users WHERE IdUser = :id
     ");
     $stmt->execute([':id' => $reservation['IdUser']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+        
     // 3. Récupérer les informations de la voiture
     $stmt = $pdo->prepare("
         SELECT * FROM Voiture WHERE IdVoiture = :id
@@ -55,8 +58,7 @@ try {
     } else {
         $brand = null;
     }
-    
-    // 5. Récupérer le type
+    // Vérifier si la voiture existe
     if ($car) {
         $stmt = $pdo->prepare("
             SELECT * FROM TypeVehicule WHERE IdType = :id
@@ -100,13 +102,16 @@ try {
         ]
     );
     
+    // Retourner une réponse de succès
     echo json_encode([
         'success' => true,
         'reservation' => $result
     ]);
-    
+// Gestion des erreurs
 } catch (PDOException $e) {
+    // Log l'erreur
     error_log("Erreur API détails réservation: " . $e->getMessage());
+    // Retourner une réponse d'erreur
     echo json_encode([
         'success' => false,
         'message' => 'Erreur de base de données: ' . $e->getMessage()

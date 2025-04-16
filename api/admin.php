@@ -18,7 +18,7 @@ function checkAdminAuth() {
         exit;
     }
 }
-
+// Gestion des actions admin
 try {
     $action = $_POST['action'] ?? '';
     
@@ -78,7 +78,7 @@ try {
                 'reservations' => $reservations
             ]);
             break;
-            
+            // Gestion des réservations
         case 'update_reservation_status':
             $reservationId = $_POST['reservation_id'] ?? '';
             $newStatus = $_POST['status'] ?? '';
@@ -138,7 +138,7 @@ try {
                 'message' => 'Statut de la réservation mis à jour'
             ]);
             break;
-            
+        // Gestion des voitures
         case 'toggle_car_status':
             $carId = $_POST['car_id'] ?? '';
             
@@ -187,17 +187,17 @@ try {
                 'message' => 'Statut de la voiture mis à jour'
             ]);
             break;
-            
+        // Gestion des administrateurs
         case 'create_admin':
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
             $nom = $_POST['nom'] ?? '';
             $prenom = $_POST['prenom'] ?? '';
-            
+            // Gestion des administrateurs
             if (empty($email) || empty($password) || empty($nom) || empty($prenom)) {
                 throw new Exception('Tous les champs sont obligatoires');
             }
-            
+            // Vérifier si l'email est valide
             if (!validateEmail($email)) {
                 throw new Exception('Email invalide');
             }
@@ -234,7 +234,7 @@ try {
                     1
                 )
             ");
-            
+            // Exécuter la requête
             $result = $stmt->execute([
                 ':id' => $adminId,
                 ':nom' => $nom,
@@ -243,26 +243,25 @@ try {
                 ':password' => password_hash($password, PASSWORD_DEFAULT),
                 ':photo' => 'assets/images/admin-profile.png'
             ]);
-            
+            // Vérifier si la requête a échoué
             if (!$result) {
                 throw new Exception('Erreur lors de la création de l\'administrateur');
             }
-            
+            // Retourner une réponse de succès
             echo json_encode([
                 'success' => true,
                 'message' => 'Administrateur créé avec succès'
             ]);
             break;
-            
+        // Gestion des réservations
         case 'get_reservation_details':
             $reservationId = $_POST['reservation_id'] ?? '';
             
             if (empty($reservationId)) {
                 throw new Exception('ID de réservation requis');
             }
-            
+            // Récupérer les détails de la réservation
             try {
-                // Récupérer les détails de la réservation
                 $sql = "
                     SELECT 
                         r.*,
@@ -278,15 +277,17 @@ try {
                     JOIN TypeVoiture t ON v.IdType = t.IdType
                     WHERE r.IdReservation = :id
                 ";
-                
+                // Préparer la requête
                 $stmt = $pdo->prepare($sql);
+                // Exécuter la requête
                 $stmt->execute([':id' => $reservationId]);
+                // Récupérer les résultats
                 $reservation = $stmt->fetch(PDO::FETCH_ASSOC);
-                
+                // Vérifier si la réservation existe
                 if (!$reservation) {
                     throw new Exception('Réservation non trouvée');
                 }
-                
+                // Retourner les résultats
                 echo json_encode([
                     'success' => true,
                     'reservation' => $reservation
@@ -296,7 +297,7 @@ try {
                 throw new Exception('Erreur de base de données: ' . $e->getMessage());
             }
             break;
-            
+        // Gestion des actions non reconnues
         default:
             throw new Exception('Action non reconnue');
     }
