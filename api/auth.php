@@ -52,18 +52,18 @@ try {
                 'nom' => $user['Nom'],
                 'prenom' => $user['Prenom'],
                 'photo' => $user['PhotoProfil'],
-                'role' => $user['IsAdmin'] ? 'admin' : 'client'
+                'role' => $user['Role']
             ];
             // Retourner une réponse de succès
             echo json_encode([
                 'success' => true,
-                'message' => $user['IsAdmin'] ? 'Connexion administrateur réussie' : 'Connexion réussie',
+                'message' => $user['Role'] === 'CLIENT' ? 'Connexion réussie' : 'Connexion administrateur réussie',
                 'user' => [
                     'email' => $user['Email'],
                     'nom' => $user['Nom'],
                     'prenom' => $user['Prenom'],
                     'photo' => $user['PhotoProfil'],
-                    'role' => $user['IsAdmin'] ? 'admin' : 'client'
+                    'role' => $user['Role']
                 ]
             ]);
             break;
@@ -122,7 +122,7 @@ try {
                         MotDePasse,
                         DateInscription,
                         PhotoProfil,
-                        IsAdmin
+                        Role
                     ) VALUES (
                         :id,
                         :nom,
@@ -133,7 +133,7 @@ try {
                         :password,
                         NOW(),
                         :photo,
-                        0
+                        'CLIENT'
                     )
                 ");
                 // Exécuter la requête
@@ -186,7 +186,7 @@ try {
                 break;
             }
             // Vérifier si l'utilisateur est un administrateur
-            $isAdmin = (bool)$userData['IsAdmin'];
+            $isAdmin = $userData['Role'] !== 'CLIENT';
             // Compter le nombre de réservations pour cet utilisateur   
             $reservationCount = 0;
             try {
@@ -215,7 +215,7 @@ try {
                     'adresse' => $userData['Adresse'],
                     'photo' => $userData['PhotoProfil'],
                     'dateInscription' => $userData['DateInscription'],
-                    'role' => $isAdmin ? 'admin' : 'client',
+                    'role' => $userData['Role'],
                     'reservations' => $reservationCount
                 ]
             ]);

@@ -10,7 +10,8 @@ session_start();
 
 // Vérifier si l'utilisateur est connecté et est un administrateur
 function checkAdminAuth() {
-    if (!isset($_SESSION['user']) || !isset($_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin') {
+    if (!isset($_SESSION['user']) || !isset($_SESSION['user']['role']) || 
+        ($_SESSION['user']['role'] !== 'ADMIN' && $_SESSION['user']['role'] !== 'SUPERADMIN')) {
         echo json_encode([
             'success' => false,
             'message' => 'Accès non autorisé. Vous devez être connecté en tant qu\'administrateur.'
@@ -18,6 +19,19 @@ function checkAdminAuth() {
         exit;
     }
 }
+
+// Vérifier si l'utilisateur est connecté et est un super administrateur
+function checkSuperAdminAuth() {
+    if (!isset($_SESSION['user']) || !isset($_SESSION['user']['role']) || 
+        $_SESSION['user']['role'] !== 'SUPERADMIN') {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Accès non autorisé. Vous devez être connecté en tant que super administrateur.'
+        ]);
+        exit;
+    }
+}
+
 // Gestion des actions admin
 try {
     $action = $_POST['action'] ?? '';
@@ -189,14 +203,25 @@ try {
             break;
         // Gestion des administrateurs
         case 'create_admin':
+            // Vérifier si l'utilisateur est un super admin avant de lui permettre de créer un admin
+            checkSuperAdminAuth();
+            
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
             $nom = $_POST['nom'] ?? '';
             $prenom = $_POST['prenom'] ?? '';
+            $role = $_POST['role'] ?? 'ADMIN'; // Par défaut ADMIN si non spécifié
+            
+            // Valider le rôle
+            if ($role !== 'ADMIN' && $role !== 'SUPERADMIN') {
+                throw new Exception('Rôle invalide');
+            }
+            
             // Gestion des administrateurs
             if (empty($email) || empty($password) || empty($nom) || empty($prenom)) {
                 throw new Exception('Tous les champs sont obligatoires');
             }
+            
             // Vérifier si l'email est valide
             if (!validateEmail($email)) {
                 throw new Exception('Email invalide');
@@ -222,7 +247,7 @@ try {
                     MotDePasse,
                     DateInscription,
                     PhotoProfil,
-                    IsAdmin
+                    Role
                 ) VALUES (
                     :id,
                     :nom,
@@ -231,9 +256,10 @@ try {
                     :password,
                     NOW(),
                     :photo,
-                    1
+                    :role
                 )
             ");
+            
             // Exécuter la requête
             $result = $stmt->execute([
                 ':id' => $adminId,
@@ -241,12 +267,15 @@ try {
                 ':prenom' => $prenom,
                 ':email' => $email,
                 ':password' => password_hash($password, PASSWORD_DEFAULT),
-                ':photo' => 'assets/images/admin-profile.png'
+                ':photo' => 'assets/images/admin-profile.png',
+                ':role' => $role
             ]);
+            
             // Vérifier si la requête a échoué
             if (!$result) {
                 throw new Exception('Erreur lors de la création de l\'administrateur');
             }
+            
             // Retourner une réponse de succès
             echo json_encode([
                 'success' => true,

@@ -55,7 +55,7 @@ if (isset($_GET['code'])) {
                 'prenom' => $user['Prenom'],
                 'email' => $user['Email'],
                 'photo' => $user['PhotoProfil'],
-                'role' => $user['IsAdmin'] ? 'admin' : 'client'
+                'role' => $user['Role']
             ];
             
             // Redirect to homepage
@@ -83,7 +83,7 @@ if (isset($_GET['code'])) {
                     MotDePasse, 
                     DateInscription, 
                     PhotoProfil,
-                    IsAdmin
+                    Role
                 ) VALUES (
                     :id,
                     :nom,
@@ -94,7 +94,7 @@ if (isset($_GET['code'])) {
                     :mdp,
                     NOW(),
                     :photo,
-                    0
+                    'CLIENT'
                 )");
                 // Exécuter la requête
                 $stmt->execute([
@@ -112,7 +112,7 @@ if (isset($_GET['code'])) {
                     'prenom' => $userInfo['given_name'] ?? 'Inconnu',
                     'email' => $userInfo['email'],
                     'photo' => $userInfo['picture'] ?? 'assets/images/default-profile.png',
-                    'role' => 'client'
+                    'role' => 'CLIENT'
                 ];
                 // Rediriger vers la page d'accueil
                 header('Location: ../index.html');

@@ -34,12 +34,35 @@ async function isAdmin() {
         });
         // Récupérer les données
         const data = await response.json();
-        // Retourner true si l'utilisateur est authentifié et est un administrateur
-        return data.success && data.isAuthenticated && data.isAdmin;
+        // Retourner true si l'utilisateur est authentifié et a un rôle ADMIN ou SUPERADMIN
+        return data.success && data.isAuthenticated && (data.user.role === 'ADMIN' || data.user.role === 'SUPERADMIN');
     } catch (error) {
         // Log l'erreur
         console.error('Error checking admin status:', error);
         // Retourner false si l'utilisateur n'est pas un administrateur
+        return false;
+    }
+}
+
+// Vérifie si l'utilisateur est un super administrateur
+async function isSuperAdmin() {
+    try {
+        // Préparer la requête
+        const formData = new FormData();
+        formData.append('action', 'check-auth');
+        // Exécuter la requête
+        const response = await fetch('api/auth.php', {
+            method: 'POST',
+            body: formData
+        });
+        // Récupérer les données
+        const data = await response.json();
+        // Retourner true si l'utilisateur est authentifié et a un rôle SUPERADMIN
+        return data.success && data.isAuthenticated && data.user.role === 'SUPERADMIN';
+    } catch (error) {
+        // Log l'erreur
+        console.error('Error checking super admin status:', error);
+        // Retourner false si l'utilisateur n'est pas un super administrateur
         return false;
     }
 }
@@ -90,6 +113,7 @@ function closeLoginModal() {
 async function updateNavigation() {
     const authenticated = await isAuthenticated();
     const isAdminUser = await isAdmin();
+    const isSuperAdminUser = await isSuperAdmin();
     const navContainer = document.querySelector('.ml-10.flex.items-baseline.space-x-4');
     
     // Vérifier si le conteneur de navigation existe
@@ -118,7 +142,7 @@ async function updateNavigation() {
             authLinks += `
                 <a href="contact.html" class="${window.location.pathname.endsWith('contact.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Contact</a>`;                
             // Ajouter le lien vers le dashboard admin si l'utilisateur est un administrateur
-            if (isAdminUser) {
+            if (isAdminUser || isSuperAdminUser) {
                 authLinks += `
                 <a href="admin-dashboard.php" class="${window.location.pathname.endsWith('admin-dashboard.php') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Dashboard Admin</a>`;
             }
@@ -140,7 +164,15 @@ async function updateNavigation() {
                         </div>`;
                 
             // Afficher différentes options selon le type d'utilisateur
-            if (isAdminUser) {
+            if (isSuperAdminUser) {
+                authLinks += `
+                        <a href="admin-dashboard.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-tachometer-alt mr-2"></i> Dashboard Admin
+                        </a>
+                        <a href="manage-users.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-users-cog mr-2"></i> Gestion des Utilisateurs
+                        </a>`;
+            } else if (isAdminUser) {
                 authLinks += `
                         <a href="admin-dashboard.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                             <i class="fas fa-tachometer-alt mr-2"></i> Dashboard Admin
