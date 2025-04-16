@@ -51,11 +51,6 @@
                         <i class="fas fa-calendar-alt mr-2"></i>Réservations
                     </a>
                 </li>
-                <li class="mr-2">
-                    <a href="#" class="tab-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-target="cars">
-                        <i class="fas fa-car mr-2"></i>Gestion Locations
-                    </a>
-                </li>
             </ul>
         </div>
 
@@ -110,49 +105,6 @@
                 </table>
             </div>
         </div>
-
-        <!-- Cars Tab -->
-        <div id="cars-tab" class="tab-content hidden">
-            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">Gestion des Locations</h2>
-                    <a href="manage-cars.php" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">
-                        <i class="fas fa-plus mr-2"></i>Ajouter une location
-                    </a>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Marque</label>
-                        <select id="brand-filter" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">Toutes les marques</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                        <select id="type-filter" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">Tous les types</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                        <select id="car-status-filter" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">Tous les statuts</option>
-                            <option value="STAT001">Disponible</option>
-                            <option value="STAT002">Louée</option>
-                            <option value="STAT003">En maintenance</option>
-                        </select>
-                    </div>
-                </div>
-                <p class="text-sm text-gray-600 mb-2">
-                    <i class="fas fa-info-circle mr-1"></i> Cette section vous permet de gérer les véhicules disponibles pour la location.
-                    Vous pouvez filtrer les véhicules et modifier leur statut.
-                </p>
-            </div>
-
-            <div id="cars-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Les voitures seront chargées ici -->
-            </div>
-        </div>
     </main>
 
     <!-- Modal pour la gestion des statuts de réservation -->
@@ -199,7 +151,6 @@
             
             // Chargement initial des données
             loadReservations();
-            setupTabNavigation();
             
             // Configurer les événements
             document.getElementById('filter-btn').addEventListener('click', loadReservations);
@@ -207,15 +158,6 @@
             document.getElementById('close-modal').addEventListener('click', closeModal);
             document.getElementById('cancel-status').addEventListener('click', closeModal);
             document.getElementById('save-status').addEventListener('click', updateReservationStatus);
-            
-            // Charger les marques et types pour les filtres
-            loadBrands();
-            loadTypes();
-            
-            // Configurer les filtres de voitures
-            document.getElementById('brand-filter').addEventListener('change', loadCars);
-            document.getElementById('type-filter').addEventListener('change', loadCars);
-            document.getElementById('car-status-filter').addEventListener('change', loadCars);
             
             // Fonction pour vérifier le statut d'authentification
             function checkAuthStatus() {
@@ -331,160 +273,6 @@
                 });
             }
             
-            // Fonction pour charger les marques
-            function loadBrands() {
-                fetch('api/brands.php')
-                    .then(response => response.json())
-                    .then(brands => {
-                        const select = document.getElementById('brand-filter');
-                        brands.forEach(brand => {
-                            const option = document.createElement('option');
-                            option.value = brand.IdMarque;
-                            option.textContent = brand.NomMarque;
-                            select.appendChild(option);
-                        });
-                    })
-                    .catch(error => console.error('Erreur chargement marques:', error));
-            }
-            
-            // Fonction pour charger les types
-            function loadTypes() {
-                fetch('api/types.php')
-                    .then(response => response.json())
-                    .then(types => {
-                        const select = document.getElementById('type-filter');
-                        types.forEach(type => {
-                            const option = document.createElement('option');
-                            option.value = type.IdType;
-                            option.textContent = type.NomType;
-                            select.appendChild(option);
-                        });
-                    })
-                    .catch(error => console.error('Erreur chargement types:', error));
-            }
-            
-            // Fonction pour charger les voitures
-            function loadCars() {
-                const brandFilter = document.getElementById('brand-filter').value;
-                const typeFilter = document.getElementById('type-filter').value;
-                const statusFilter = document.getElementById('car-status-filter').value;
-                
-                const params = new URLSearchParams();
-                if (brandFilter) params.append('marque', brandFilter);
-                if (typeFilter) params.append('type', typeFilter);
-                if (statusFilter) params.append('status', statusFilter);
-                
-                fetch(`api/search.php?${params.toString()}`)
-                    .then(response => response.json())
-                    .then(cars => {
-                        const carsGrid = document.getElementById('cars-grid');
-                        carsGrid.innerHTML = '';
-                        
-                        if (cars.length === 0) {
-                            carsGrid.innerHTML = `
-                                <div class="col-span-3 text-center text-gray-500 py-8">
-                                    Aucune voiture trouvée
-                                </div>
-                            `;
-                            return;
-                        }
-                        
-                        cars.forEach(car => {
-                            let statusClass = '';
-                            let statusText = '';
-                            
-                            switch (car.IdStatut) {
-                                case 'STAT001': 
-                                    statusClass = 'bg-green-100 text-green-800'; 
-                                    statusText = 'Disponible';
-                                    break;
-                                case 'STAT002': 
-                                    statusClass = 'bg-yellow-100 text-yellow-800'; 
-                                    statusText = 'Louée';
-                                    break;
-                                case 'STAT003': 
-                                    statusClass = 'bg-red-100 text-red-800'; 
-                                    statusText = 'En maintenance';
-                                    break;
-                            }
-                            
-                            carsGrid.innerHTML += `
-                                <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                                    <div class="relative h-48">
-                                        <img src="${car.Photo || 'assets/images/placeholder.jpg'}" 
-                                             alt="${car.NomMarque} ${car.Modele}"
-                                             class="w-full h-full object-cover">
-                                    </div>
-                                    <div class="p-4">
-                                        <div class="flex justify-between items-start mb-2">
-                                            <h3 class="text-lg font-semibold">${car.NomMarque} ${car.Modele}</h3>
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
-                                                ${statusText}
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-gray-600 mb-4">Type: ${car.NomType}</p>
-                                        <div class="grid grid-cols-2 gap-2 text-sm mb-4">
-                                            <div>Année: ${car.Annee}</div>
-                                            <div>Puissance: ${car.Puissance} HP</div>
-                                            <div>Carburant: ${car.Energie}</div>
-                                            <div>Places: ${car.NbPlaces}</div>
-                                        </div>
-                                        <div class="flex space-x-2">
-                                            <a href="edit-car.php?id=${car.IdVoiture}" 
-                                               class="flex-1 bg-blue-600 text-white text-center py-2 rounded hover:bg-blue-700">
-                                                <i class="fas fa-edit mr-1"></i> Modifier
-                                            </a>
-                                            <button onclick="updateCarStatus(${car.IdVoiture})"
-                                                    class="flex-1 bg-gray-600 text-white text-center py-2 rounded hover:bg-gray-700">
-                                                <i class="fas fa-sync-alt mr-1"></i> Statut
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                    })
-                    .catch(error => console.error('Erreur chargement voitures:', error));
-            }
-            
-            // Fonction pour configurer la navigation par onglets
-            function setupTabNavigation() {
-                const tabLinks = document.querySelectorAll('.tab-link');
-                const tabContents = document.querySelectorAll('.tab-content');
-                
-                tabLinks.forEach(link => {
-                    link.addEventListener('click', e => {
-                        e.preventDefault();
-                        
-                        // Supprimer la classe active de tous les onglets
-                        tabLinks.forEach(link => {
-                            link.classList.remove('active', 'border-blue-600', 'text-blue-600');
-                            link.classList.add('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300');
-                        });
-                        
-                        // Ajouter la classe active à l'onglet cliqué
-                        link.classList.add('active', 'border-blue-600', 'text-blue-600');
-                        link.classList.remove('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300');
-                        
-                        // Masquer tous les contenus d'onglet
-                        tabContents.forEach(content => {
-                            content.classList.add('hidden');
-                        });
-                        
-                        // Afficher le contenu correspondant à l'onglet cliqué
-                        const targetId = link.getAttribute('data-target');
-                        document.getElementById(`${targetId}-tab`).classList.remove('hidden');
-                        
-                        // Charger les données correspondantes
-                        if (targetId === 'cars') {
-                            loadCars();
-                        } else if (targetId === 'reservations') {
-                            loadReservations();
-                        }
-                    });
-                });
-            }
-            
             // Fonction pour se déconnecter
             function logout() {
                 fetch('api/auth.php', {
@@ -535,30 +323,6 @@
                         notyf.success('Statut mis à jour avec succès');
                         closeModal();
                         loadReservations();
-                    } else {
-                        notyf.error(data.message || 'Erreur lors de la mise à jour du statut');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur lors de la mise à jour du statut:', error);
-                    notyf.error('Erreur de connexion');
-                });
-            }
-            
-            // Fonction pour mettre à jour le statut d'une voiture
-            window.updateCarStatus = function(carId) {
-                fetch('api/admin.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `action=toggle_car_status&car_id=${carId}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        notyf.success('Statut de la voiture mis à jour');
-                        loadCars();
                     } else {
                         notyf.error(data.message || 'Erreur lors de la mise à jour du statut');
                     }

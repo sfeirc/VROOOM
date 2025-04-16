@@ -267,13 +267,12 @@ try {
                     r.*,
                     u.IdUser, u.Nom, u.Prenom, u.Email, u.Tel, u.Adresse,
                     v.IdVoiture, v.Modele, v.Annee, v.Couleur, v.Energie, v.Puissance, v.NbPlaces, v.Prix, v.Description, v.Photo,
-                    v.IdStatut, s.NomStatut,
+                    v.IdStatut,
                     m.IdMarque, m.NomMarque,
                     t.IdType, t.NomType
                 FROM Reservation r
                 JOIN Users u ON r.IdUser = u.IdUser
                 JOIN Voiture v ON r.IdVoiture = v.IdVoiture
-                JOIN StatutVoiture s ON v.IdStatut = s.IdStatut
                 JOIN MarqueVoiture m ON v.IdMarque = m.IdMarque
                 JOIN TypeVoiture t ON v.IdType = t.IdType
                 WHERE r.IdReservation = :id

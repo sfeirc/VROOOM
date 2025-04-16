@@ -321,7 +321,15 @@
                 document.getElementById('car-type').textContent = reservation.NomType;
                 document.getElementById('car-year').textContent = reservation.Annee;
                 document.getElementById('car-color').textContent = reservation.Couleur;
-                document.getElementById('car-status').textContent = reservation.NomStatut;
+                
+                // Map status ID to display name
+                let carStatusText = 'Inconnu';
+                switch (reservation.IdStatut) {
+                    case 'STAT001': carStatusText = 'Disponible'; break;
+                    case 'STAT002': carStatusText = 'Louée'; break;
+                    case 'STAT003': carStatusText = 'En maintenance'; break;
+                }
+                document.getElementById('car-status').textContent = carStatusText;
                 
                 // Informations location
                 const startDate = new Date(reservation.DateDebut);
