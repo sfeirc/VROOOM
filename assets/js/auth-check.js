@@ -94,11 +94,9 @@ async function updateNavigation() {
                 <a href="index.html" class="${window.location.pathname.endsWith('index.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Accueil</a>
                 <a href="search.html" class="${window.location.pathname.endsWith('search.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Rechercher</a>`;
             
-            // Add Réservations tab for all authenticated users
-            if (!isAdminUser) {
-                authLinks += `
+            // Add Réservations tab for all authenticated users, both regular users and admins
+            authLinks += `
                 <a href="mes-reservations.html" class="${window.location.pathname.endsWith('mes-reservations.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Réservations</a>`;
-            }
             
             authLinks += `
                 <a href="contact.html" class="${window.location.pathname.endsWith('contact.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Contact</a>`;
