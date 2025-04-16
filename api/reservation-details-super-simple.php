@@ -109,7 +109,18 @@ try {
                 error_log("Erreur récupération marque: " . $e->getMessage());
             }
             
-            // On saute la récupération du type car TypeVoiture n'existe pas
+            // Récupération du type de voiture
+            try {
+                $stmt = $pdo->prepare("SELECT * FROM TypeVoiture WHERE IdTypeVoiture = :id");
+                $stmt->execute([':id' => $car['IdType']]);
+                $type = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($type) {
+                    $carData['NomType'] = $type['NomType'];
+                }
+            } catch (PDOException $e) {
+                error_log("Erreur récupération type de voiture: " . $e->getMessage());
+            }
         }
     } catch (PDOException $e) {
         error_log("Erreur récupération voiture: " . $e->getMessage());
