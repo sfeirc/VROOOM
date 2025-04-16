@@ -96,29 +96,10 @@
                     <button id="change-status-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
                         <i class="fas fa-exchange-alt mr-2"></i>Changer le statut
                     </button>
-                    <a id="print-invoice-btn" href="#" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition">
-                        <i class="fas fa-print mr-2"></i>Imprimer facture
-                    </a>
-                    <button id="send-mail-btn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">
-                        <i class="fas fa-envelope mr-2"></i>Envoyer un email
-                    </button>
                     <button id="cancel-btn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">
                         <i class="fas fa-ban mr-2"></i>Annuler la réservation
                     </button>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Notes et commentaires -->
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-xl font-semibold">Notes et Commentaires</h2>
-            </div>
-            <div class="p-6">
-                <textarea id="admin-notes" class="w-full h-32 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4" placeholder="Ajoutez vos notes administratives ici..."></textarea>
-                <button id="save-notes-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
-                    <i class="fas fa-save mr-2"></i>Enregistrer les notes
-                </button>
             </div>
         </div>
     </main>
@@ -148,38 +129,6 @@
                 </button>
                 <button id="save-status" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                     Enregistrer
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal d'envoi d'email -->
-    <div id="email-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded-lg shadow-xl p-6 max-w-xl w-full">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Envoyer un email au client</h3>
-                <button id="close-email-modal" class="text-gray-400 hover:text-gray-500">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Destinataire</label>
-                <input type="email" id="email-to" class="w-full p-2 border border-gray-300 rounded-md" readonly>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Sujet</label>
-                <input type="text" id="email-subject" class="w-full p-2 border border-gray-300 rounded-md">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                <textarea id="email-message" class="w-full h-40 p-2 border border-gray-300 rounded-md"></textarea>
-            </div>
-            <div class="flex justify-end space-x-3">
-                <button id="cancel-email" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                    Annuler
-                </button>
-                <button id="send-email" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                    Envoyer
                 </button>
             </div>
         </div>
@@ -214,12 +163,7 @@
             document.getElementById('close-modal').addEventListener('click', closeModal);
             document.getElementById('cancel-status').addEventListener('click', closeModal);
             document.getElementById('save-status').addEventListener('click', updateReservationStatus);
-            document.getElementById('send-mail-btn').addEventListener('click', openEmailModal);
-            document.getElementById('close-email-modal').addEventListener('click', closeEmailModal);
-            document.getElementById('cancel-email').addEventListener('click', closeEmailModal);
-            document.getElementById('send-email').addEventListener('click', sendEmail);
             document.getElementById('cancel-btn').addEventListener('click', confirmCancelReservation);
-            document.getElementById('save-notes-btn').addEventListener('click', saveNotes);
             
             // Fonction pour vérifier le statut d'authentification
             function checkAuthStatus() {
@@ -331,10 +275,6 @@
                     document.getElementById('duration').textContent = diffDays;
                     document.getElementById('daily-price').textContent = parseFloat(reservation.Prix).toFixed(2);
                     document.getElementById('total-amount').textContent = parseFloat(reservation.MontantReservation).toFixed(2);
-                    
-                    // Préparer l'email pour la modal
-                    document.getElementById('email-to').value = reservation.Email;
-                    document.getElementById('email-subject').value = `Votre réservation #${reservation.IdReservation} chez Vroom Prestige`;
                 } catch (error) {
                     console.error("Erreur lors de l'affichage des détails:", error);
                     console.error("Données reçues:", reservation);
@@ -382,49 +322,12 @@
                 });
             }
             
-            // Fonction pour ouvrir la modal d'email
-            function openEmailModal() {
-                document.getElementById('email-modal').classList.remove('hidden');
-            }
-            
-            // Fonction pour fermer la modal d'email
-            function closeEmailModal() {
-                document.getElementById('email-modal').classList.add('hidden');
-            }
-            
-            // Fonction pour envoyer un email (simulé)
-            function sendEmail() {
-                const to = document.getElementById('email-to').value;
-                const subject = document.getElementById('email-subject').value;
-                const message = document.getElementById('email-message').value;
-                
-                if (!subject || !message) {
-                    notyf.error('Veuillez remplir tous les champs');
-                    return;
-                }
-                
-                // Simulation d'envoi d'email
-                setTimeout(() => {
-                    notyf.success(`Email envoyé à ${to}`);
-                    closeEmailModal();
-                }, 1000);
-            }
-            
             // Fonction pour confirmer l'annulation d'une réservation
             function confirmCancelReservation() {
                 if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
                     document.getElementById('new-status').value = 'Annulée';
                     updateReservationStatus();
                 }
-            }
-            
-            // Fonction pour sauvegarder les notes (simulé)
-            function saveNotes() {
-                const notes = document.getElementById('admin-notes').value;
-                // Simulation de sauvegarde
-                setTimeout(() => {
-                    notyf.success('Notes enregistrées avec succès');
-                }, 500);
             }
         });
     </script>
