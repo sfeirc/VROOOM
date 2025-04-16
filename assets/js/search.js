@@ -21,8 +21,11 @@ async function updateAvailableFilters() {
         const response = await fetch(`api/advanced-search.php?${queryParams}`);
         const data = await response.json();
         
+        // Vérifier si les filtres ont été chargés avec succès  
         if (data.success) {
+            // Mettre à jour les filtres disponibles
             availableFilters = data.filters;
+            // Mettre à jour l'interface des filtres
             updateFilterUI();
         }
     } catch (error) {
@@ -56,6 +59,7 @@ function updateFilterUI() {
     const powerMinInput = document.getElementById('puissance_min');
     const powerMaxInput = document.getElementById('puissance_max');
     if (availableFilters.puissance) {
+        // Mettre à jour la plage de puissance
         powerMinInput.min = availableFilters.puissance.min;
         powerMinInput.max = availableFilters.puissance.max;
         powerMaxInput.min = availableFilters.puissance.min;
@@ -66,6 +70,7 @@ function updateFilterUI() {
     const yearMinInput = document.getElementById('annee_min');
     const yearMaxInput = document.getElementById('annee_max');
     if (availableFilters.annees) {
+        // Mettre à jour la plage d'années
         yearMinInput.min = availableFilters.annees.min;
         yearMinInput.max = availableFilters.annees.max;
         yearMaxInput.min = availableFilters.annees.min;
@@ -78,14 +83,20 @@ function updateSelect(selectElement, options) {
     const currentValue = selectElement.value;
     selectElement.innerHTML = '<option value="">All</option>';
     
+    // Parcourir les options
     Object.entries(options).forEach(([value, label]) => {
+        // Créer une option
         const option = document.createElement('option');
+        // Définir la valeur de l'option
         option.value = value;
+        // Définir le texte de l'option
         option.textContent = label;
+        // Ajouter l'option au sélecteur
         selectElement.appendChild(option);
     });
-    
+    // Vérifier si la valeur actuelle existe et est incluse dans les options
     if (currentValue && Object.keys(options).includes(currentValue)) {
+        // Mettre à jour la valeur du sélecteur
         selectElement.value = currentValue;
     }
 }
@@ -94,15 +105,20 @@ function updateSelect(selectElement, options) {
 function updateSelectSimple(selectElement, options) {
     const currentValue = selectElement.value;
     selectElement.innerHTML = '<option value="">All</option>';
-    
+    // Parcourir les options
     options.forEach(value => {
+        // Créer une option
         const option = document.createElement('option');
+        // Définir la valeur de l'option
         option.value = value;
+        // Définir le texte de l'option
         option.textContent = value;
+        // Ajouter l'option au sélecteur
         selectElement.appendChild(option);
     });
-    
+    // Vérifier si la valeur actuelle existe et est incluse dans les options
     if (currentValue && options.includes(currentValue)) {
+        // Mettre à jour la valeur du sélecteur
         selectElement.value = currentValue;
     }
 }
@@ -114,14 +130,17 @@ function setupFilterListeners() {
         element.addEventListener('change', async () => {
             const filterName = element.dataset.filter;
             const value = element.value;
-            
+            // Vérifier si la valeur existe
             if (value) {
+                // Ajouter la valeur au filtre
                 currentFilters[filterName] = value;
             } else {
+                // Supprimer la valeur du filtre
                 delete currentFilters[filterName];
             }
-            
+            // Mettre à jour les filtres disponibles
             await updateAvailableFilters();
+            // Effectuer la recherche
             performSearch();
         });
     });
@@ -133,9 +152,11 @@ async function performSearch() {
         const queryParams = new URLSearchParams(currentFilters);
         const response = await fetch(`api/advanced-search.php?${queryParams}`);
         const data = await response.json();
-        
+        // Vérifier si les résultats ont été chargés avec succès
         if (data.success) {
+            // Afficher les résultats
             displayResults(data.cars);
+            // Mettre à jour le nombre de résultats
             updateResultCount(data.count);
         }
     } catch (error) {
@@ -147,9 +168,11 @@ async function performSearch() {
 function displayResults(cars) {
     const resultsContainer = document.getElementById('search-results');
     resultsContainer.innerHTML = '';
-    
+    // Parcourir les voitures
     cars.forEach(car => {
+        // Créer un élément de voiture
         const carElement = createCarElement(car);
+        // Ajouter l'élément de voiture au conteneur
         resultsContainer.appendChild(carElement);
     });
 }
@@ -158,7 +181,7 @@ function displayResults(cars) {
 function createCarElement(car) {
     const article = document.createElement('article');
     article.className = 'bg-white rounded-lg shadow-md overflow-hidden';
-    
+    // Ajouter le contenu de la voiture au conteneur
     article.innerHTML = `
         <div class="relative">
             <img src="${car.Image}" alt="${car.Modele}" class="w-full h-48 object-cover">
@@ -183,7 +206,7 @@ function createCarElement(car) {
             </button>
         </div>
     `;
-    
+    // Retourner l'élément de voiture
     return article;
 }
 

@@ -1,9 +1,10 @@
 <?php
+// Gestion des erreurs
 require_once '../config/database.php';
 require_once '../config/env.php';
-
+// Gestion des sessions
 session_start();
-
+// Gestion des erreurs
 // Charger les variables d'environnement
 loadEnv();
 
@@ -54,22 +55,24 @@ if (isset($_GET['code'])) {
                 'prenom' => $user['Prenom'],
                 'email' => $user['Email'],
                 'photo' => $user['PhotoProfil'],
-                'role' => $user['IsAdmin'] ? 'admin' : 'client'
+                'role' => $user['Role']
             ];
             
             // Redirect to homepage
             header('Location: ../index.html');
             exit;
         } else {
-            // User doesn't exist, create a new user
+            // L'utilisateur n'existe pas, créer un nouvel utilisateur  
             // Générer un identifiant utilisateur unique
             $userId = 'USR' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
             
             // Créer un mot de passe aléatoire
             $randomPassword = bin2hex(random_bytes(16));
+            // Hacher le mot de passe
             $hashedPassword = password_hash($randomPassword, PASSWORD_DEFAULT);
             
             try {
+                // Préparer la requête
                 $stmt = $pdo->prepare("INSERT INTO Users (
                     IdUser, 
                     Nom, 
@@ -80,7 +83,7 @@ if (isset($_GET['code'])) {
                     MotDePasse, 
                     DateInscription, 
                     PhotoProfil,
-                    IsAdmin
+                    Role
                 ) VALUES (
                     :id,
                     :nom,
@@ -91,9 +94,9 @@ if (isset($_GET['code'])) {
                     :mdp,
                     NOW(),
                     :photo,
-                    0
+                    'CLIENT'
                 )");
-                
+                // Exécuter la requête
                 $stmt->execute([
                     ':id' => $userId,
                     ':nom' => $userInfo['family_name'] ?? 'Inconnu',
@@ -102,29 +105,31 @@ if (isset($_GET['code'])) {
                     ':mdp' => $hashedPassword,
                     ':photo' => $userInfo['picture'] ?? 'assets/images/default-profile.png'
                 ]);
-                
-                // Set up session
+                // Récupérer les informations de l'utilisateur
                 $_SESSION['user'] = [
                     'id' => $userId,
                     'nom' => $userInfo['family_name'] ?? 'Inconnu',
                     'prenom' => $userInfo['given_name'] ?? 'Inconnu',
                     'email' => $userInfo['email'],
                     'photo' => $userInfo['picture'] ?? 'assets/images/default-profile.png',
-                    'role' => 'client'
+                    'role' => 'CLIENT'
                 ];
-                
-                // Redirect to homepage
+                // Rediriger vers la page d'accueil
                 header('Location: ../index.html');
                 exit;
             } catch (Exception $e) {
-                error_log("Error creating new user: " . $e->getMessage());
+                // Gérer les erreurs
+                error_log("Erreur lors de la création de l'utilisateur: " . $e->getMessage());
                 $error = "Une erreur est survenue lors de la création de votre compte.";
+                // Rediriger vers la page de connexion avec l'erreur
                 header("Location: ../login.html?error=" . urlencode($error));
                 exit;
             }
         }
     } catch (Exception $e) {
+        // Gérer les erreurs
         error_log("Erreur d'authentification Google: " . $e->getMessage());
+        // Rediriger vers la page de connexion avec l'erreur
         header('Location: ../login_register.html?error=' . urlencode($e->getMessage()));
         exit;
     }
@@ -133,7 +138,7 @@ if (isset($_GET['code'])) {
 // Fonction pour obtenir le jeton d'accès
 function getAccessToken($code) {
     global $clientID, $clientSecret, $redirectUri;
-    
+    // Préparer la requête
     $url = 'https://oauth2.googleapis.com/token';
     $data = [
         'code' => $code,
@@ -142,17 +147,24 @@ function getAccessToken($code) {
         'redirect_uri' => $redirectUri,
         'grant_type' => 'authorization_code'
     ];
-    
+    // Initialiser cURL
     $ch = curl_init($url);
+    // Configurer cURL pour envoyer une requête POST
     curl_setopt($ch, CURLOPT_POST, 1);
+    // Configurer cURL pour envoyer les données POST
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+    // Configurer cURL pour retourner la réponse
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Uniquement pour le développement
+    // Configurer cURL pour ne pas vérifier le certificat SSL
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
     
+    // Exécuter la requête
     $response = curl_exec($ch);
+    // Récupérer l'erreur
     $error = curl_error($ch);
+    // Fermer cURL
     curl_close($ch);
-    
+    // Vérifier si une erreur est survenue
     if ($error) {
         error_log("Erreur CURL: " . $error);
         return ['error' => 'curl_error', 'error_description' => $error];
@@ -165,14 +177,19 @@ function getAccessToken($code) {
 function getUserInfo($token) {
     $url = 'https://www.googleapis.com/oauth2/v2/userinfo';
     $headers = ['Authorization: Bearer ' . $token['access_token']];
-    
+    // Initialiser cURL
     $ch = curl_init($url);
+    // Configurer cURL pour envoyer les en-têtes HTTP
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    // Configurer cURL pour retourner la réponse
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Uniquement pour le développement
+    // Configurer cURL pour ne pas vérifier le certificat SSL
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
     
+    // Exécuter la requête
     $response = curl_exec($ch);
+    // Fermer cURL
     curl_close($ch);
-    
+    // Retourner les informations de l'utilisateur
     return json_decode($response, true);
 } 

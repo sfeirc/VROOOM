@@ -292,6 +292,7 @@
         const registerForm = document.getElementById('register-form');
         const switchForm = document.querySelector('.switch-form');
 
+        // Fonction pour basculer les formulaires
         switchBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const formType = btn.dataset.form;
@@ -313,12 +314,11 @@
         // Gérer la soumission du formulaire de connexion
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+            // Récupérer les données du formulaire
             const formData = new FormData();
             formData.append('action', 'login');
             formData.append('email', loginForm.querySelector('input[name="email"]').value.trim());
             formData.append('password', loginForm.querySelector('input[name="password"]').value);
-            
             try {
                 const response = await fetch('api/auth.php', {
                     method: 'POST',

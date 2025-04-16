@@ -13,20 +13,27 @@ async function loadBrandsAndTypes() {
         const typesResponse = await fetch('api/types.php');
         const typesData = await typesResponse.json();
 
+        // Vérifier si les marques ont été chargées avec succès
         if (brandsData.success && brandsData.brands) {
+            // Mettre à jour la sélection des marques
             updateBrandSelect(brandsData.brands);
         }
 
+        // Vérifier si les types ont été chargés avec succès
         if (typesData.success && typesData.types) {
+            // Mettre à jour la sélection des types
             updateTypeSelect(typesData.types);
         }
 
+        // Retourner les marques et les types
         return {
             brands: brandsData.brands || [],
             types: typesData.types || []
         };
     } catch (error) {
+        // Log l'erreur
         console.error('Error loading brands and types:', error);
+        // Retourner un tableau vide
         return { brands: [], types: [] };
     }
 }
@@ -37,11 +44,15 @@ function updateBrandSelect(brands) {
     brandSelects.forEach(select => {
         const currentValue = select.value;
         select.innerHTML = '<option value="">Toutes les marques</option>';
-        
+        // Parcourir les marques    
         brands.forEach(brand => {
+            // Créer une option
             const option = document.createElement('option');
+            // Définir la valeur de l'option
             option.value = brand.IdMarque;
+            // Définir le texte de l'option
             option.textContent = brand.NomMarque;
+            // Ajouter l'option au sélecteur
             select.appendChild(option);
         });
 

@@ -142,7 +142,7 @@
 
     <script src="assets/js/main.js"></script>
     <script>
-    // mettre a jour la fonction performSearch pour utiliser les nouvelles valeurs des filtres
+        // Fonction pour effectuer la recherche
     async function performSearch() {
         const filters = getFilterValues();
         const params = new URLSearchParams();
@@ -159,11 +159,11 @@
         }
     }
 
-    // mettre a jour les resultats de la recherche
-    function updateSearchResults(data) {
-        const resultsContainer = document.getElementById('search-results');
-        resultsContainer.innerHTML = '';
-        
+        // Mettre à jour les résultats de la recherche
+        function updateSearchResults(data) {
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = '';
+            
         if (!data || data.length === 0) {
             resultsContainer.innerHTML = `
                 <div class="text-center py-8">

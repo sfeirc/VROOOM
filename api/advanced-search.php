@@ -107,6 +107,7 @@ try {
         error_log("First car: " . print_r($cars[0], true));
     }
 
+    // Retourner les résultats
     echo json_encode([
         'success' => true,
         'count' => count($cars),
@@ -121,6 +122,7 @@ try {
     ]);
 
 } catch(Exception $e) {
+    // Gestion des erreurs
     error_log("Error in advanced search: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
