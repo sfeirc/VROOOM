@@ -36,13 +36,13 @@ try {
             $sql = "
                 SELECT 
                     r.*, 
-                    c.NomClient, 
-                    c.PrenomClient, 
-                    c.MailClient,
+                    u.Nom AS NomClient, 
+                    u.Prenom AS PrenomClient, 
+                    u.Email AS MailClient,
                     v.Modele,
                     m.NomMarque
                 FROM Reservation r
-                JOIN Client c ON r.IdClient = c.IdClient
+                JOIN Users u ON r.IdUser = u.IdUser
                 JOIN Voiture v ON r.IdVoiture = v.IdVoiture
                 JOIN MarqueVoiture m ON v.IdMarque = m.IdMarque
                 WHERE 1=1
@@ -187,7 +187,73 @@ try {
                 'message' => 'Statut de la voiture mis à jour'
             ]);
             break;
-        
+            
+        case 'create_admin':
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+            $nom = $_POST['nom'] ?? '';
+            $prenom = $_POST['prenom'] ?? '';
+            
+            if (empty($email) || empty($password) || empty($nom) || empty($prenom)) {
+                throw new Exception('Tous les champs sont obligatoires');
+            }
+            
+            if (!validateEmail($email)) {
+                throw new Exception('Email invalide');
+            }
+            
+            // Vérifier si l'email existe déjà
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM Users WHERE Email = :email");
+            $stmt->execute([':email' => $email]);
+            if ($stmt->fetchColumn() > 0) {
+                throw new Exception('Cet email est déjà utilisé');
+            }
+            
+            // Générer l'ID de l'utilisateur pour admin
+            $adminId = 'ADM' . date('Y') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            
+            // Créer l'admin
+            $stmt = $pdo->prepare("
+                INSERT INTO Users (
+                    IdUser,
+                    Nom,
+                    Prenom,
+                    Email,
+                    MotDePasse,
+                    DateInscription,
+                    PhotoProfil,
+                    IsAdmin
+                ) VALUES (
+                    :id,
+                    :nom,
+                    :prenom,
+                    :email,
+                    :password,
+                    NOW(),
+                    :photo,
+                    1
+                )
+            ");
+            
+            $result = $stmt->execute([
+                ':id' => $adminId,
+                ':nom' => $nom,
+                ':prenom' => $prenom,
+                ':email' => $email,
+                ':password' => password_hash($password, PASSWORD_DEFAULT),
+                ':photo' => 'assets/images/admin-profile.png'
+            ]);
+            
+            if (!$result) {
+                throw new Exception('Erreur lors de la création de l\'administrateur');
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Administrateur créé avec succès'
+            ]);
+            break;
+            
         default:
             throw new Exception('Action non reconnue');
     }
