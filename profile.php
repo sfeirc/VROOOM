@@ -125,14 +125,6 @@
                             <p class="text-2xl font-bold text-blue-600" id="reservations-count">0</p>
                             <p class="text-sm text-gray-600">Réservations</p>
                         </div>
-                        <div class="stats-card bg-purple-50 rounded-lg p-4 text-center min-w-[150px]">
-                            <p class="text-2xl font-bold text-purple-600" id="favorites-count">0</p>
-                            <p class="text-sm text-gray-600">Favoris</p>
-                        </div>
-                        <div class="stats-card bg-green-50 rounded-lg p-4 text-center min-w-[150px]">
-                            <p class="text-2xl font-bold text-green-600" id="reviews-count">0</p>
-                            <p class="text-sm text-gray-600">Avis</p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -333,8 +325,6 @@
                 // Simuler le chargement des statistiques (remplacer par les données réelles lorsqu'elles seront disponibles)
                 setTimeout(() => {
                     animateCounter(document.getElementById('reservations-count'), data.user.reservations || 0);
-                    animateCounter(document.getElementById('favorites-count'), data.user.favorites || 0);
-                    animateCounter(document.getElementById('reviews-count'), data.user.reviews || 0);
                 }, 500);
 
             } catch (error) {
