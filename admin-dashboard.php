@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    <script src="assets/js/auth-check.js"></script>
 </head>
 <body class="bg-gray-100">
     <!-- Navigation -->
@@ -16,20 +17,12 @@
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <a href="/" class="flex-shrink-0">
-                        <img class="h-8 w-auto" src="assets/images/logo.png" alt="Vroom Prestige">
+                        <img class="h-16 w-auto" src="assets/logo/logo.png" alt="Vroom Prestige">
                     </a>
-                    <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="index.php" class="text-gray-800 hover:text-gray-600 px-3 py-2 rounded-md font-medium">Accueil</a>
-                        <a href="search.php" class="text-gray-800 hover:text-gray-600 px-3 py-2 rounded-md font-medium">Rechercher</a>
-                        <a href="admin-dashboard.php" class="bg-blue-600 text-white px-3 py-2 rounded-md font-medium">Dashboard Admin</a>
-                    </div>
                 </div>
-                <div class="flex items-center">
-                    <div id="user-info" class="hidden flex items-center space-x-3">
-                        <span id="user-name" class="font-medium text-gray-800"></span>
-                        <button id="logout-btn" class="text-red-600 hover:text-red-800">
-                            <i class="fas fa-sign-out-alt mr-1"></i> Déconnexion
-                        </button>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <!-- This section will be dynamically updated by auth-check.js -->
                     </div>
                 </div>
             </div>
@@ -154,7 +147,6 @@
             
             // Configurer les événements
             document.getElementById('filter-btn').addEventListener('click', loadReservations);
-            document.getElementById('logout-btn').addEventListener('click', logout);
             document.getElementById('close-modal').addEventListener('click', closeModal);
             document.getElementById('cancel-status').addEventListener('click', closeModal);
             document.getElementById('save-status').addEventListener('click', updateReservationStatus);
@@ -171,9 +163,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.isAuthenticated && data.isAdmin) {
-                        // Afficher les informations de l'administrateur
-                        document.getElementById('user-info').classList.remove('hidden');
-                        document.getElementById('user-name').textContent = `${data.user.prenom} ${data.user.nom}`;
+                        // Afficher les informations de l'administrateur dans le header du dashboard
                         document.getElementById('admin-info').textContent = `Connecté en tant qu'administrateur: ${data.user.prenom} ${data.user.nom}`;
                     } else {
                         // Rediriger vers la page de connexion si ce n'est pas un administrateur
@@ -270,26 +260,6 @@
                             </td>
                         </tr>
                     `;
-                });
-            }
-            
-            // Fonction pour se déconnecter
-            function logout() {
-                fetch('api/auth.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'action=logout'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = 'login_register.php';
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur lors de la déconnexion:', error);
                 });
             }
             
