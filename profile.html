@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="assets/js/auth-check.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -77,27 +78,7 @@
                 </div>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="index.html" class="text-gray-800 hover:text-gray-600 px-3 py-2 rounded-md font-medium">Accueil</a>
-                        <a href="search.html" class="text-gray-800 hover:text-gray-600 px-3 py-2 rounded-md font-medium">Rechercher</a>
-                        <a href="contact.html" class="text-gray-800 hover:text-gray-600 px-3 py-2 rounded-md font-medium">Contact</a>
-                        <div class="relative" id="profile-menu">
-                            <button class="text-blue-600 border-b-2 border-blue-600 px-3 py-2 rounded-md font-medium flex items-center">
-                                <span id="user-name">Mon Profil</span>
-                                <i class="fas fa-chevron-down ml-2"></i>
-                            </button>
-                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden" id="profile-dropdown">
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="edit-profile-btn">
-                                    <i class="fas fa-user-edit mr-2"></i>Modifier le profil
-                                </a>
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="my-reservations-btn">
-                                    <i class="fas fa-calendar-alt mr-2"></i>Mes réservations
-                                </a>
-                                <hr class="my-1">
-                                <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100" id="logout-btn">
-                                    <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
-                                </a>
-                            </div>
-                        </div>
+                        <!-- This section will be dynamically updated by auth-check.js -->
                     </div>
                 </div>
             </div>
@@ -226,21 +207,6 @@
             ]
         });
 
-        // Basculer la liste déroulante des profils
-        const profileMenu = document.getElementById('profile-menu');
-        const profileDropdown = document.getElementById('profile-dropdown');
-
-        profileMenu.addEventListener('click', () => {
-            profileDropdown.classList.toggle('hidden');
-        });
-
-        // Fermer la liste déroulante lors d'un clic en dehors
-        document.addEventListener('click', (e) => {
-            if (!profileMenu.contains(e.target)) {
-                profileDropdown.classList.add('hidden');
-            }
-        });
-
         // Charger les données de l'utilisateur et les statistiques
         async function loadUserData() {
             try {
@@ -268,7 +234,6 @@
                     }, 100);
                 };
 
-                updateWithAnimation(document.getElementById('user-name'), `${data.user.prenom} ${data.user.nom}`);
                 updateWithAnimation(document.getElementById('profile-name'), `${data.user.prenom} ${data.user.nom}`);
                 updateWithAnimation(document.getElementById('profile-email'), data.user.email);
                 
@@ -322,11 +287,9 @@
                     }, 50);
                 };
 
-                // Simuler le chargement des statistiques (remplacer par les données réelles lorsqu'elles seront disponibles)
+                // Charger le compteur de réservations
                 setTimeout(() => {
                     animateCounter(document.getElementById('reservations-count'), data.user.reservations || 0);
-                    animateCounter(document.getElementById('favorites-count'), data.user.favorites || 0);
-                    animateCounter(document.getElementById('reviews-count'), data.user.reviews || 0);
                 }, 500);
 
             } catch (error) {
@@ -358,6 +321,7 @@
                 if (data.success) {
                     notyf.success('Profil mis à jour avec succès');
                     loadUserData(); // Recharger les données de l'utilisateur
+                    updateNavigation(); // Mettre à jour la navigation avec les nouvelles infos
                 } else {
                     notyf.error(data.error || 'Erreur lors de la mise à jour');
                 }
@@ -393,6 +357,7 @@
                         if (data.success) {
                             notyf.success('Photo de profil mise à jour');
                             loadUserData();
+                            updateNavigation(); // Mettre à jour la navigation avec la nouvelle photo
                         } else {
                             notyf.error(data.error || 'Erreur lors de la mise à jour de la photo');
                         }
@@ -405,33 +370,11 @@
             input.click();
         });
 
-        // Gérer la déconnexion pour les deux boutons
-        const handleLogout = async (e) => {
+        // Ajouter l'événement pour le bouton de déconnexion en bas de page
+        document.getElementById('logout-btn-bottom').addEventListener('click', function(e) {
             e.preventDefault();
-            
-            try {
-                const formData = new FormData();
-                formData.append('action', 'logout');
-                
-                const response = await fetch('api/auth.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    window.location.href = 'index.html';
-                }
-            } catch (error) {
-                console.error('Error logging out:', error);
-                notyf.error('Erreur lors de la déconnexion');
-            }
-        };
-
-        // Ajouter des écouteurs d'événements pour les deux boutons de déconnexion
-        document.getElementById('logout-btn').addEventListener('click', handleLogout);
-        document.getElementById('logout-btn-bottom').addEventListener('click', handleLogout);
+            logout(); // Utilise la fonction de déconnexion de auth-check.js
+        });
 
         // Charger les données de l'utilisateur au chargement de la page avec une animation de disparition
         document.addEventListener('DOMContentLoaded', () => {
