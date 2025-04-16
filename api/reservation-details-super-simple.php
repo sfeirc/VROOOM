@@ -4,7 +4,7 @@ require_once '../config/database.php';
 header('Content-Type: application/json');
 session_start();
 
-// Get the reservation ID from the request
+// Obtenir l'ID de réservation à partir de la demande
 $reservationId = $_REQUEST['id'] ?? '';
 
 if (empty($reservationId)) {
