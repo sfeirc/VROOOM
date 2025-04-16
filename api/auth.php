@@ -188,6 +188,17 @@ try {
             }
             
             $isAdmin = (bool)$userData['IsAdmin'];
+            
+            // Compter le nombre de réservations pour cet utilisateur
+            $reservationCount = 0;
+            try {
+                $reservationStmt = $pdo->prepare("SELECT COUNT(*) FROM Reservation WHERE IdUser = :userId");
+                $reservationStmt->execute([':userId' => $_SESSION['user']['id']]);
+                $reservationCount = (int)$reservationStmt->fetchColumn();
+            } catch (PDOException $e) {
+                error_log("Erreur lors du comptage des réservations: " . $e->getMessage());
+                // Ne pas faire échouer toute la requête pour cette erreur
+            }
 
             echo json_encode([
                 'success' => true,
@@ -202,7 +213,8 @@ try {
                     'adresse' => $userData['Adresse'],
                     'photo' => $userData['PhotoProfil'],
                     'dateInscription' => $userData['DateInscription'],
-                    'role' => $isAdmin ? 'admin' : 'client'
+                    'role' => $isAdmin ? 'admin' : 'client',
+                    'reservations' => $reservationCount
                 ]
             ]);
             break;
