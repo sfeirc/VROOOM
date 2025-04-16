@@ -53,7 +53,7 @@
                 </li>
                 <li class="mr-2">
                     <a href="#" class="tab-link inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-target="cars">
-                        <i class="fas fa-car mr-2"></i>Gestion Voitures
+                        <i class="fas fa-car mr-2"></i>Gestion Locations
                     </a>
                 </li>
             </ul>
@@ -115,12 +115,12 @@
         <div id="cars-tab" class="tab-content hidden">
             <div class="bg-white shadow-md rounded-lg p-6 mb-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">Gestion des Voitures</h2>
+                    <h2 class="text-xl font-semibold">Gestion des Locations</h2>
                     <a href="manage-cars.php" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">
-                        <i class="fas fa-plus mr-2"></i>Ajouter une voiture
+                        <i class="fas fa-plus mr-2"></i>Ajouter une location
                     </a>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Marque</label>
                         <select id="brand-filter" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -143,6 +143,10 @@
                         </select>
                     </div>
                 </div>
+                <p class="text-sm text-gray-600 mb-2">
+                    <i class="fas fa-info-circle mr-1"></i> Cette section vous permet de gérer les véhicules disponibles pour la location.
+                    Vous pouvez filtrer les véhicules et modifier leur statut.
+                </p>
             </div>
 
             <div id="cars-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">

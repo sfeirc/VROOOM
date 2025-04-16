@@ -254,6 +254,45 @@ try {
             ]);
             break;
             
+        case 'get_reservation_details':
+            $reservationId = $_POST['reservation_id'] ?? '';
+            
+            if (empty($reservationId)) {
+                throw new Exception('ID de réservation requis');
+            }
+            
+            // Récupérer les détails de la réservation
+            $sql = "
+                SELECT 
+                    r.*,
+                    u.IdUser, u.Nom, u.Prenom, u.Email, u.Tel, u.Adresse,
+                    v.IdVoiture, v.Modele, v.Annee, v.Couleur, v.Energie, v.Puissance, v.NbPlaces, v.Prix, v.Description, v.Photo,
+                    v.IdStatut, s.NomStatut,
+                    m.IdMarque, m.NomMarque,
+                    t.IdType, t.NomType
+                FROM Reservation r
+                JOIN Users u ON r.IdUser = u.IdUser
+                JOIN Voiture v ON r.IdVoiture = v.IdVoiture
+                JOIN StatutVoiture s ON v.IdStatut = s.IdStatut
+                JOIN MarqueVoiture m ON v.IdMarque = m.IdMarque
+                JOIN TypeVoiture t ON v.IdType = t.IdType
+                WHERE r.IdReservation = :id
+            ";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':id' => $reservationId]);
+            $reservation = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$reservation) {
+                throw new Exception('Réservation non trouvée');
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'reservation' => $reservation
+            ]);
+            break;
+            
         default:
             throw new Exception('Action non reconnue');
     }
