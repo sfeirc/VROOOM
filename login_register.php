@@ -118,7 +118,7 @@
         <!-- Logo and Navigation -->
         <nav class="mb-8">
             <a href="index.html" class="inline-flex items-center space-x-2">
-                <img src="assets/images/logo.png" alt="Vroom Prestige" class="h-10">
+                <img src="assets/logo/logo.png" alt="Vroom Prestige" class="h-10">
                 <span class="text-2xl font-bold text-gray-900">Vroom Prestige</span>
             </a>
         </nav>
@@ -193,7 +193,6 @@
                                 <input type="checkbox" class="rounded border-gray-300 text-blue-600">
                                 <span>Se souvenir de moi</span>
                             </label>
-                            <a href="#" class="text-blue-600 hover:text-blue-700">Mot de passe oublié ?</a>
                         </div>
                         <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
                             Se connecter
@@ -219,10 +218,12 @@
                         <div class="input-group">
                             <input type="tel" name="tel" placeholder="Téléphone" pattern="[0-9]{10}" title="Numéro de téléphone à 10 chiffres">
                             <i class="fas fa-phone"></i>
+                            <p class="text-sm text-gray-500 mt-1">Optionnel</p>
                         </div>
                         <div class="input-group">
                             <input type="text" name="adresse" placeholder="Adresse">
                             <i class="fas fa-map-marker-alt"></i>
+                            <p class="text-sm text-gray-500 mt-1">Optionnel</p>
                         </div>
                         <div class="input-group">
                             <input type="password" name="password" placeholder="Mot de passe" required minlength="8">
@@ -232,12 +233,7 @@
                             <input type="password" name="confirmPassword" placeholder="Confirmer le mot de passe" required minlength="8">
                             <i class="fas fa-lock"></i>
                         </div>
-                        <div class="text-sm text-gray-600">
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="rounded border-gray-300 text-blue-600" required>
-                                <span>J'accepte les conditions d'utilisation et la politique de confidentialité</span>
-                            </label>
-                        </div>
+                        
                         <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
                             Créer un compte
                         </button>
@@ -420,7 +416,7 @@
 
         // Google OAuth Configuration
         const googleClientId = '549081801061-lgpg1eledv5ptt3dqsc272rg144vsi2p.apps.googleusercontent.com';
-        const redirectUri = 'http://localhost/VROOOM/api/google-callback.php';
+        const redirectUri = 'http://localhost/api/google-callback.php';
 
         function initiateGoogleLogin() {
             const scope = 'email profile';

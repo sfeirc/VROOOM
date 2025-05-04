@@ -45,7 +45,7 @@
                     <a class="text-[#FFFFFF] text-sm font-medium leading-normal" href="contact.html">Contact</a>
                     <button
                 class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#019863] text-[#FFFFFF] text-sm font-bold leading-normal tracking-[0.015em]"
-                onclick="window.location.href='login_register.html'">
+                onclick="window.location.href='login_register.php'">
                 <span class="truncate">Se Connecter / S'inscrire</span>
               </button>
                   </div>

@@ -271,7 +271,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const authenticated = await isAuthenticated();
             if (!authenticated) {
-                window.location.href = `login_register.html?redirect=${encodeURIComponent(window.location.href)}`;
+                window.location.href = `login_register.php?redirect=${encodeURIComponent(window.location.href)}`;
                 return;
             }
 

@@ -19,7 +19,7 @@
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <a href="/" class="flex-shrink-0">
-                        <img class="h-8 w-auto" src="assets/images/logo.png" alt="Vroom Prestige">
+                        <img class="h-8 w-auto" src="assets/logo/logo.png" alt="Vroom Prestige">
                     </a>
                 </div>
                 <div class="hidden md:block">
