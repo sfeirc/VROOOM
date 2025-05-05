@@ -221,7 +221,7 @@
                 const data = await response.json();
                 
                 if (!data.success || !data.isAuthenticated) {
-                    window.location.href = 'login_register.html';
+                    window.location.href = 'login_register.php';
                     return;
                 }
 

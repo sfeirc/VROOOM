@@ -219,25 +219,31 @@
                         <div class="input-group">
                             <input type="tel" name="tel" placeholder="Téléphone" pattern="[0-9]{10}" title="Numéro de téléphone à 10 chiffres">
                             <i class="fas fa-phone"></i>
+                            <p class="text-sm text-gray-500 mt-1">Optionnel</p>
                         </div>
                         <div class="input-group">
                             <input type="text" name="adresse" placeholder="Adresse">
                             <i class="fas fa-map-marker-alt"></i>
+                            <p class="text-sm text-gray-500 mt-1">Optionnel</p>
                         </div>
                         <div class="input-group">
-                            <input type="password" name="password" placeholder="Mot de passe" required minlength="8">
+                            <input type="password" name="password" placeholder="Mot de passe" required minlength="12" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}$" title="Le mot de passe doit contenir au moins 12 caractères, une majuscule, une minuscule et un chiffre">
                             <i class="fas fa-lock"></i>
+                            <div class="mt-4 space-y-2">
+                                <p class="text-gray-600 text-base">Le mot de passe doit contenir :</p>
+                                <div class="space-y-3 text-gray-500">
+                                    <div id="length-check">Au moins 12 caractères</div>
+                                    <div id="uppercase-check">Au moins une majuscule</div>
+                                    <div id="lowercase-check">Au moins une minuscule</div>
+                                    <div id="number-check">Au moins un chiffre</div>
+                                </div>
+                            </div>
                         </div>
                         <div class="input-group">
                             <input type="password" name="confirmPassword" placeholder="Confirmer le mot de passe" required minlength="8">
                             <i class="fas fa-lock"></i>
                         </div>
-                        <div class="text-sm text-gray-600">
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="rounded border-gray-300 text-blue-600" required>
-                                <span>J'accepte les conditions d'utilisation et la politique de confidentialité</span>
-                            </label>
-                        </div>
+                        
                         <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
                             Créer un compte
                         </button>
@@ -360,9 +366,15 @@
                 return;
             }
             
-            // Valider la longueur du mot de passe
-            if (formData.get('password').length < 8) {
-                notyf.error('Le mot de passe doit contenir au moins 8 caractères');
+            // Valider la longueur du mot de passe et les critères
+            const password = formData.get('password');
+            const hasMinLength = password.length >= 12;
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumber = /\d/.test(password);
+
+            if (!hasMinLength || !hasUpperCase || !hasLowerCase || !hasNumber) {
+                notyf.error('Le mot de passe doit contenir au moins 12 caractères, une majuscule, une minuscule et un chiffre');
                 return;
             }
             
@@ -393,6 +405,31 @@
             }
         });
 
+        // Ajouter la validation en temps réel du mot de passe
+        const passwordInput = registerForm.querySelector('input[name="password"]');
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            
+            // Vérifier chaque critère
+            const hasMinLength = password.length >= 12;
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumber = /\d/.test(password);
+
+            // Mettre à jour les indicateurs visuels
+            const checks = {
+                'length-check': hasMinLength,
+                'uppercase-check': hasUpperCase,
+                'lowercase-check': hasLowerCase,
+                'number-check': hasNumber
+            };
+
+            for (const [id, isValid] of Object.entries(checks)) {
+                const element = document.getElementById(id);
+                element.style.color = isValid ? '#ef4444' : '#6b7280';
+            }
+        });
+
         // verifier si l'utilisateur est deja connecté
         async function checkAuth() {
             try {
@@ -420,7 +457,7 @@
 
         // Google OAuth Configuration
         const googleClientId = '1078013737887-vh7akbdb27tfk1b5l633t4a7hjria2t1.apps.googleusercontent.com';
-        const redirectUri = 'http://clovis.sfeir.com/VROOOM/api/google-callback.php';
+        const redirectUri = 'http://clovis.sfeir.com/api/google-callback.php';
 
         function initiateGoogleLogin() {
             const scope = 'email profile';

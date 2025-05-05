@@ -72,7 +72,7 @@ async function checkAuthAndUpdateNav() {
                 <a href="index.html" class="${window.location.pathname.endsWith('index.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Accueil</a>
                 <a href="search.html" class="${window.location.pathname.endsWith('search.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Rechercher</a>
                 <a href="contact.html" class="${window.location.pathname.endsWith('contact.html') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-800 hover:text-gray-600'} px-3 py-2 rounded-md font-medium">Contact</a>
-                <a href="login_register.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                <a href="login_register.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
                     <i class="fas fa-sign-in-alt mr-2"></i>Connexion
                 </a>
             `;
