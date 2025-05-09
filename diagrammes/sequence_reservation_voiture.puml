@@ -1,0 +1,41 @@
+@startuml "Réservation d'une voiture"
+
+actor Utilisateur
+participant "Page d'accueil" as Accueil
+participant "Service OAuth" as OAuth
+participant "Page principale" as Main
+participant "Moteur de recherche" as Search
+participant "Base de données" as DB
+participant "Espace personnel" as Espace
+participant "Administrateur" as Admin
+
+== Authentification ==
+Utilisateur -> Accueil : Accède à la page d'accueil
+Utilisateur -> Accueil : Clique sur "Se connecter / S'inscrire"
+Accueil -> OAuth : Redirection vers OAuth
+OAuth -> OAuth : Authentification
+OAuth -> Main : Redirection après authentification
+
+== Recherche de véhicule ==
+Utilisateur -> Main : Accède à la page principale
+Utilisateur -> Search : Sélectionne critères de recherche\n(SUV, < 3 ans, essence)
+Search -> DB : Requête préparée sécurisée
+DB --> Search : Liste des 5 SUV disponibles
+Search --> Utilisateur : Affiche les résultats
+
+== Réservation ==
+Utilisateur -> Search : Sélectionne BMW X5 M
+Utilisateur -> Search : Choisit dates (09/05 - 23/05)
+Search -> DB : Vérifie disponibilité
+DB --> Search : Confirme disponibilité
+Search --> Utilisateur : Affiche récapitulatif
+Utilisateur -> Search : Confirme la réservation
+Search -> Espace : Enregistre la réservation
+Espace --> Utilisateur : Confirme l'enregistrement
+
+== Validation administrative ==
+Espace -> Admin : Notifie nouvelle réservation
+Admin -> Espace : Valide la réservation
+Espace --> Utilisateur : Notification de validation
+
+@enduml 

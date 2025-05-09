@@ -1,0 +1,93 @@
+@startuml Car Reservation System
+
+' Style général
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+    ArrowColor DarkBlue
+    FontSize 14
+}
+
+' Amélioration du layout
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 100
+skinparam padding 8
+skinparam roundcorner 20
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam note {
+    BackgroundColor LightYellow
+    BorderColor Gray
+    FontSize 12
+}
+
+' Acteurs
+actor "Utilisateur" as user
+actor "Administrateur" as admin
+admin --|> user
+
+' Système
+rectangle "Système de Réservation" {
+    ' Organisation en colonnes
+    together {
+        usecase "Se connecter/S'inscrire" as UC1
+        usecase "Authentification Google" as UC1_1
+    }
+    
+    together {
+        usecase "Rechercher des véhicules" as UC2
+        usecase "Filtrer les résultats" as UC3
+    }
+    
+    together {
+        usecase "Sélectionner un véhicule" as UC4
+        usecase "Choisir dates de location" as UC5
+    }
+    
+    together {
+        usecase "Consulter récapitulatif" as UC6
+        usecase "Confirmer réservation" as UC7
+    }
+    
+    usecase "Valider réservation" as UC8
+}
+
+' Relations avec les acteurs
+user --> UC1
+user --> UC2
+user --> UC3
+user --> UC4
+admin --> UC8
+user -- admin
+
+' Dépendances entre cas d'utilisation
+UC1 ..> UC1_1 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC4 : <<include>>
+UC4 ..> UC5 : <<include>>
+UC5 ..> UC6 : <<include>>
+UC6 ..> UC7 : <<include>>
+UC7 ..> UC8 : <<extend>>
+
+' Notes explicatives
+note right of UC3
+  Filtres:
+  - Type (SUV)
+  - Année (max 3 ans)
+  - Énergie (essence)
+end note
+
+note right of UC7
+  La réservation est
+  enregistrée dans
+  l'espace personnel
+end note
+
+note right of UC1_1
+  Authentification
+  via Google OAuth
+end note
+
+@enduml 

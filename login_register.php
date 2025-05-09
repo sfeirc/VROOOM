@@ -153,15 +153,7 @@
                             <p class="text-gray-600">Processus de réservation simple et sûr</p>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-headset text-blue-600 text-xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-gray-900">Support 24/7</h3>
-                            <p class="text-gray-600">Une équipe à votre service à tout moment</p>
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
 

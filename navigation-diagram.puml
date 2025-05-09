@@ -1,0 +1,63 @@
+@startuml VROOOM Navigation Diagram
+
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam defaultFontName Arial
+skinparam ArrowColor #666666
+skinparam NodeBackgroundColor #f0f0f0
+skinparam NodeBorderColor #666666
+
+title VROOOM - Diagramme de Navigation
+
+' Pages principales
+rectangle "Accueil" as home
+rectangle "Connexion/Inscription" as auth
+rectangle "Recherche" as search
+rectangle "Réservation" as booking
+rectangle "Récapitulatif" as summary
+rectangle "Profil" as profile
+rectangle "Mes Réservations" as myReservations
+rectangle "Contact" as contact
+rectangle "Tableau de Bord Admin" as admin
+rectangle "Gestion des Véhicules" as manageCars
+
+' Flux de navigation
+home --> auth : "Se connecter/S'inscrire"
+home --> search : "Rechercher"
+home --> contact : "Nous contacter"
+
+auth --> home : "Retour à l'accueil"
+auth --> profile : "Après connexion"
+
+search --> booking : "Sélectionner un véhicule"
+search --> home : "Retour à l'accueil"
+
+booking --> summary : "Confirmer la réservation"
+booking --> search : "Retour à la recherche"
+
+summary --> myReservations : "Voir mes réservations"
+summary --> home : "Retour à l'accueil"
+
+profile --> myReservations : "Voir mes réservations"
+profile --> home : "Retour à l'accueil"
+
+myReservations --> profile : "Retour au profil"
+myReservations --> home : "Retour à l'accueil"
+
+contact --> home : "Retour à l'accueil"
+
+admin --> manageCars : "Gérer les véhicules"
+admin --> home : "Retour à l'accueil"
+
+manageCars --> admin : "Retour au tableau de bord"
+
+note right of auth
+  Authentification requise
+  pour les pages protégées
+end note
+
+note right of admin
+  Accès administrateur requis
+end note
+
+@enduml 
