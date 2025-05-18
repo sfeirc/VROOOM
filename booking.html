@@ -44,6 +44,64 @@
             color: white !important;
             border-radius: 9999px !important;
         }
+        /* Carousel styles */
+        .carousel {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.75rem;
+        }
+        .carousel-inner {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        .carousel-item {
+            flex: 0 0 100%;
+            width: 100%;
+        }
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .carousel-nav:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .carousel-prev {
+            left: 10px;
+        }
+        .carousel-next {
+            right: 10px;
+        }
+        .carousel-indicators {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+        .carousel-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+        }
+        .carousel-indicator.active {
+            background-color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -118,6 +176,10 @@
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
         let bookedDates = []; // Pour stocker les périodes déjà réservées
+        
+        // Carousel state
+        let currentSlide = 0;
+        let allPhotos = [];
 
         // Charger les détails de la voiture et les dates réservées
         async function loadCarDetails() {
@@ -136,11 +198,71 @@
                 }
 
                 if (carData.success) {
+                    // Debug logging
+                    console.log('Car data received:', carData.car);
+                    console.log('Photo:', carData.car.Photo);
+                    console.log('PhotosSupplementaires:', carData.car.PhotosSupplementaires);
+                    console.log('PhotoSupplementairesArray:', carData.car.PhotoSupplementairesArray);
+
+                    // Get the main photo
+                    let mainPhoto = carData.car.Photo || '';
+                    console.log('Selected main photo:', mainPhoto);
+                    
+                    // Handle supplementary photos - ensure we have a valid array
+                    let supplementary = [];
+                    if (carData.car.PhotoSupplementairesArray && Array.isArray(carData.car.PhotoSupplementairesArray)) {
+                        supplementary = carData.car.PhotoSupplementairesArray;
+                        console.log('Using PhotoSupplementairesArray directly:', supplementary);
+                    } else if (carData.car.PhotosSupplementaires) {
+                        try {
+                            supplementary = JSON.parse(carData.car.PhotosSupplementaires);
+                            console.log('Parsed PhotosSupplementaires:', supplementary);
+                        } catch (e) {
+                            console.error('Error parsing PhotosSupplementaires:', e);
+                            supplementary = [];
+                        }
+                    }
+                    
+                    // Remove empty/duplicate values and ensure all URLs are valid
+                    allPhotos = [mainPhoto, ...supplementary]
+                        .filter(url => url && typeof url === 'string' && url.trim() !== '')
+                        .filter((url, idx, arr) => arr.indexOf(url) === idx);
+                    
+                    console.log('Final allPhotos array:', allPhotos);
+
+                    // Always render the carousel, even if only one image
+                    const carouselItemsHtml = allPhotos.map((photo, index) => `
+                        <div class="carousel-item" data-index="${index}">
+                            <div class="w-full h-[300px] bg-center bg-no-repeat bg-cover"
+                                 style="background-image: url('${photo}');">
+                            </div>
+                        </div>
+                    `).join('');
+
+                    const indicatorsHtml = allPhotos.map((_, index) => `
+                        <div class="carousel-indicator ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
+                    `).join('');
+
+                    const carouselHtml = `
+                        <div class="carousel">
+                            <div class="carousel-inner">
+                                ${carouselItemsHtml}
+                            </div>
+                            <div class="carousel-nav carousel-prev">
+                                <i class="fas fa-chevron-left"></i>
+                            </div>
+                            <div class="carousel-nav carousel-next">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                            <div class="carousel-indicators">
+                                ${indicatorsHtml}
+                            </div>
+                        </div>
+                    `;
+
                     const carDetailsHtml = `
                         <div class="p-4">
-                            <div class="w-full h-[300px] bg-center bg-no-repeat bg-cover rounded-xl relative" 
-                                style="background-image: url('${carData.car.Photo}');">
-                            </div>
+                            ${carouselHtml}
                         </div>
                         <h1 class="text-[#333] tracking-light text-[32px] font-bold leading-tight px-4 text-left pb-3">
                             ${carData.car.NomMarque} ${carData.car.Modele}
@@ -243,7 +365,9 @@
                         </div>
                     `;
                     document.getElementById('car-details').innerHTML = carDetailsHtml;
-                    
+                    // Always initialize carousel functionality after rendering
+                    initCarousel();
+
                     // Une fois les données chargées, générer le calendrier
                     generateCalendar();
                 } else {
@@ -253,6 +377,84 @@
                 console.error('Error loading car details:', error);
                 notyf.error('Une erreur est survenue');
             }
+        }
+
+        // Initialize carousel functionality
+        function initCarousel() {
+            const carousel = document.querySelector('.carousel');
+            if (!carousel) return; // Defensive: if not present, do nothing
+            const carouselInner = carousel.querySelector('.carousel-inner');
+            const prevBtn = carousel.querySelector('.carousel-prev');
+            const nextBtn = carousel.querySelector('.carousel-next');
+            const indicators = carousel.querySelectorAll('.carousel-indicator');
+            // Always start from the first slide when re-initializing
+            currentSlide = 0;
+
+            // Update carousel display
+            const updateCarousel = () => {
+                carouselInner.style.transform = `translateX(-${currentSlide * 100}%)`;
+                indicators.forEach((indicator, index) => {
+                    if (index === currentSlide) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            };
+
+            // Previous slide button
+            prevBtn.addEventListener('click', () => {
+                currentSlide = (currentSlide === 0) ? allPhotos.length - 1 : currentSlide - 1;
+                updateCarousel();
+            });
+
+            // Next slide button
+            nextBtn.addEventListener('click', () => {
+                currentSlide = (currentSlide === allPhotos.length - 1) ? 0 : currentSlide + 1;
+                updateCarousel();
+            });
+
+            // Indicator clicks
+            indicators.forEach(indicator => {
+                indicator.addEventListener('click', () => {
+                    currentSlide = parseInt(indicator.dataset.index);
+                    updateCarousel();
+                });
+            });
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    prevBtn.click();
+                } else if (e.key === 'ArrowRight') {
+                    nextBtn.click();
+                }
+            });
+
+            // Touch swipe functionality
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            carousel.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+
+            carousel.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+
+            const handleSwipe = () => {
+                const threshold = 50;
+                if (touchEndX < touchStartX - threshold) {
+                    nextBtn.click();
+                } else if (touchEndX > touchStartX + threshold) {
+                    prevBtn.click();
+                }
+            };
+
+            // Initial update
+            updateCarousel();
         }
 
         // Vérifier si une date est réservée

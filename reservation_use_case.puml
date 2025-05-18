@@ -1,0 +1,64 @@
+@startuml Reservation de Voiture
+
+' Disposition verticale : système en haut, acteurs et cas alignés de haut en bas
+top to bottom direction
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor<< Main >> LightGreen
+    BorderColor DarkGreen
+}
+
+' Définition des acteurs (Utilisateur défini en premier pour encourager position à gauche)
+actor "Utilisateur" as user
+actor "Administrateur" as admin
+
+' Généralisation : l'administrateur est un type d'utilisateur
+admin --|> user
+
+' Borne du système
+rectangle "VROOOM - Système de Réservation" {
+    ' Cas d'utilisation principaux (empilés verticalement)
+    usecase "Se connecter" as UC1
+    usecase "S'inscrire" as UC2
+    usecase "Rechercher un véhicule" as UC3
+    usecase "Filtrer les résultats" as UC4
+    usecase "Sélectionner un véhicule" as UC5
+    usecase "Choisir la période" as UC6
+    usecase "Voir le récapitulatif" as UC7
+    usecase "Confirmer la réservation" as UC8
+    usecase "Valider la réservation" as UC9 << Main >>
+
+    ' Notes explicatives
+    note right of UC1
+        Méthodes d'authentification :
+        1. Login / Mot de passe
+        2. Google OAuth (système externe)
+    end note
+
+    note right of UC4
+        Critères de filtrage :
+        - Type de véhicule (SUV)
+        - Âge du véhicule (≤ 3 ans)
+        - Type de carburant (Essence)
+    end note
+}
+
+' Relations entre acteurs et cas d'utilisation
+user --> UC1
+user --> UC2
+user --> UC3
+admin --> UC9
+
+' Relations entre cas d'utilisation (flux logique, de haut en bas)
+UC1 ..> UC3 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC4 : <<include>>
+UC4 ..> UC5 : <<include>>
+UC5 ..> UC6 : <<include>>
+UC6 ..> UC7 : <<include>>
+UC7 ..> UC8 : <<include>>
+UC8 ..> UC9 : <<extend>>
+
+@enduml 

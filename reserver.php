@@ -24,6 +24,63 @@
             background-color: #019863 !important;
             color: white !important;
         }
+        /* Carousel styles */
+        .carousel {
+            position: relative;
+            overflow: hidden;
+        }
+        .carousel-inner {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        .carousel-item {
+            flex: 0 0 100%;
+            width: 100%;
+        }
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .carousel-nav:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .carousel-prev {
+            left: 10px;
+        }
+        .carousel-next {
+            right: 10px;
+        }
+        .carousel-indicators {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+        .carousel-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+        }
+        .carousel-indicator.active {
+            background-color: #019863;
+        }
     </style>
 </head>
 <body>
@@ -86,6 +143,10 @@
         // Dates sélectionnées
         let selectedStartDate = null;
         let selectedEndDate = null;
+        
+        // Carousel state
+        let currentSlide = 0;
+        let allPhotos = [];
 
         // Charger les détails de la voiture
         async function loadCarDetails() {
@@ -94,12 +155,59 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Prepare all photos array
+                    allPhotos = [data.car.PhotoPrincipale];
+                    
+                    // Add supplementary photos if available
+                    if (data.car.PhotoSupplementairesArray && data.car.PhotoSupplementairesArray.length > 0) {
+                        allPhotos = allPhotos.concat(data.car.PhotoSupplementairesArray);
+                    }
+                    
+                    // Generate carousel HTML
+                    let carouselHtml = '';
+                    if (allPhotos.length > 1) {
+                        // Multi-photo carousel
+                        const carouselItemsHtml = allPhotos.map((photo, index) => `
+                            <div class="carousel-item" data-index="${index}">
+                                <div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
+                                     style="background-image: url('${photo}');">
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        const indicatorsHtml = allPhotos.map((_, index) => `
+                            <div class="carousel-indicator ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
+                        `).join('');
+                        
+                        carouselHtml = `
+                            <div class="carousel rounded-xl">
+                                <div class="carousel-inner">
+                                    ${carouselItemsHtml}
+                                </div>
+                                <div class="carousel-nav carousel-prev">
+                                    <i class="fas fa-chevron-left"></i>
+                                </div>
+                                <div class="carousel-nav carousel-next">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                                <div class="carousel-indicators">
+                                    ${indicatorsHtml}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Single photo
+                        carouselHtml = `
+                            <div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
+                                style="background-image: url('${data.car.PhotoPrincipale}');">
+                            </div>
+                        `;
+                    }
+                    
                     const carDetailsHtml = `
                         <div class="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3 p-4">
                             <div class="flex flex-col gap-3">
-                                <div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
-                                    style="background-image: url('${data.car.PhotoPrincipale}');">
-                                </div>
+                                ${carouselHtml}
                             </div>
                         </div>
                         <h1 class="text-[#FFFFFF] tracking-light text-[32px] font-bold leading-tight px-4 text-left pb-3 pt-6">
@@ -129,6 +237,11 @@
                         </div>
                     `;
                     document.getElementById('car-details').innerHTML = carDetailsHtml;
+                    
+                    // Initialize carousel functionality if we have multiple photos
+                    if (allPhotos.length > 1) {
+                        initCarousel();
+                    }
                 } else {
                     notyf.error('Erreur lors du chargement des détails du véhicule');
                 }
@@ -136,6 +249,82 @@
                 console.error('Error loading car details:', error);
                 notyf.error('Une erreur est survenue');
             }
+        }
+
+        // Initialize carousel functionality
+        function initCarousel() {
+            const carousel = document.querySelector('.carousel');
+            const carouselInner = carousel.querySelector('.carousel-inner');
+            const prevBtn = carousel.querySelector('.carousel-prev');
+            const nextBtn = carousel.querySelector('.carousel-next');
+            const indicators = carousel.querySelectorAll('.carousel-indicator');
+            
+            // Update carousel display
+            const updateCarousel = () => {
+                carouselInner.style.transform = `translateX(-${currentSlide * 100}%)`;
+                
+                // Update indicators
+                indicators.forEach((indicator, index) => {
+                    if (index === currentSlide) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            };
+            
+            // Previous slide button
+            prevBtn.addEventListener('click', () => {
+                currentSlide = (currentSlide === 0) ? allPhotos.length - 1 : currentSlide - 1;
+                updateCarousel();
+            });
+            
+            // Next slide button
+            nextBtn.addEventListener('click', () => {
+                currentSlide = (currentSlide === allPhotos.length - 1) ? 0 : currentSlide + 1;
+                updateCarousel();
+            });
+            
+            // Indicator clicks
+            indicators.forEach(indicator => {
+                indicator.addEventListener('click', () => {
+                    currentSlide = parseInt(indicator.dataset.index);
+                    updateCarousel();
+                });
+            });
+            
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    prevBtn.click();
+                } else if (e.key === 'ArrowRight') {
+                    nextBtn.click();
+                }
+            });
+            
+            // Touch swipe functionality
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            carousel.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            carousel.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            
+            const handleSwipe = () => {
+                const threshold = 50;
+                if (touchEndX < touchStartX - threshold) {
+                    // Swipe left - next slide
+                    nextBtn.click();
+                } else if (touchEndX > touchStartX + threshold) {
+                    // Swipe right - previous slide
+                    prevBtn.click();
+                }
+            };
         }
 
         // Générer le calendrier

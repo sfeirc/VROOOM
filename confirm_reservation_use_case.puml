@@ -1,0 +1,59 @@
+@startuml Confirmation d'une Réservation
+
+' Disposition verticale
+top to bottom direction
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor<< Main >> LightGreen
+    BorderColor DarkGreen
+}
+
+' Définition des acteurs
+actor "Administrateur" as admin
+actor "Système" as system
+
+' Borne du système
+rectangle "VROOOM - Confirmation de Réservation" {
+    ' Cas d'utilisation principaux
+    usecase "Se connecter" as UC1
+    usecase "Accéder au dashboard admin" as UC2
+    usecase "Consulter les réservations en attente" as UC3
+    usecase "Sélectionner une réservation" as UC4
+    usecase "Confirmer la réservation" as UC5 << Main >>
+    usecase "Mettre à jour le statut du véhicule" as UC6
+    usecase "Notifier le client" as UC7
+
+    ' Notes explicatives
+    note right of UC1
+        Préconditions :
+        - Compte administrateur valide
+        - Rôle = ADMIN
+    end note
+
+    note right of UC5
+        Actions système :
+        1. Vérifier l'existence de la réservation
+        2. Vérifier le statut autorisé
+        3. Mettre à jour statut = "Confirmée"
+        4. Mettre à jour véhicule = "Louée"
+    end note
+}
+
+' Relations entre acteurs et cas d'utilisation (point d'entrée uniquement)
+admin --> UC1
+
+' Relations entre cas d'utilisation (flux logique séquentiel)
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC4 : <<include>>
+UC4 ..> UC5 : <<include>>
+UC5 ..> UC6 : <<include>>
+UC5 ..> UC7 : <<include>>
+
+' Relations système (actions automatiques)
+system --> UC6
+system --> UC7
+
+@enduml 

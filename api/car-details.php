@@ -27,6 +27,30 @@ try {
         throw new Exception('Voiture non trouvée');
     }
     
+    // Parse PhotosSupplementaires JSON field if it exists
+    if (isset($car['PhotosSupplementaires']) && !empty($car['PhotosSupplementaires'])) {
+        // Log the raw PhotosSupplementaires value
+        error_log("Raw PhotosSupplementaires: " . $car['PhotosSupplementaires']);
+        
+        // Try to decode the JSON string
+        $decoded = json_decode($car['PhotosSupplementaires'], true);
+        
+        // Log any JSON decode errors
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log("JSON decode error: " . json_last_error_msg());
+            $car['PhotoSupplementairesArray'] = [];
+        } else {
+            $car['PhotoSupplementairesArray'] = $decoded;
+            error_log("Decoded PhotoSupplementairesArray: " . print_r($decoded, true));
+        }
+    } else {
+        $car['PhotoSupplementairesArray'] = [];
+        error_log("No PhotosSupplementaires found or empty");
+    }
+    
+    // Log the final car data being sent
+    error_log("Final car data being sent: " . print_r($car, true));
+    
     echo json_encode([
         'success' => true,
         'car' => $car
